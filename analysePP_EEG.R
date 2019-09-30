@@ -1,8 +1,8 @@
 # WARNING: Each participant analysed will download around 1.3GB of data locally!
 # this script downloads and analyses pupillometry and EEG data 
 
-participant <- 'P301'
-outputplot <- 2
+participant <- 'P302'
+outputplot <- 0
 
 
 localdir <- '~/Documents/local/'
@@ -22,7 +22,7 @@ if (!file.exists(datadir)){dir.create(datadir)}   # create a local directory to 
 packagelist <- c('signal','remotes','tictoc')
 missingpackages <- packagelist[!packagelist %in% installed.packages()[,1]]
 if (length(missingpackages)>0){install.packages(missingpackages)}
-remotes::install_github("centerforopenscience/osfr")
+if (packagelist[!'osfr' %in% installed.packages()[,1]]){remotes::install_github("centerforopenscience/osfr")}
 packagelist <- c(packagelist,'osfr')
 toinstall <- packagelist[which(!packagelist %in% (.packages()))]
 invisible(lapply(toinstall,library,character.only=TRUE))
@@ -43,17 +43,22 @@ Pytoken <- componentlist[PyID,2]
 Pyfiles <- osf_ls_files(Pytoken)
 
 for (n in 1:nrow(EEGfiles)){
-  if (pmatch(participant,as.character(EEGfiles[n,1]))){
+  if (pmatch(participant,as.character(EEGfiles[n,1]),nomatch=0)){
     if (!file.exists(paste(EEGdir,as.character(EEGfiles[n,1]),sep=''))){
       osf_download(EEGfiles[n,],paste(EEGdir,as.character(EEGfiles[n,1]),sep=''))
-}}}
+    }}
+  if (pmatch('header',as.character(EEGfiles[n,1]),nomatch=0)){
+    if (!file.exists(paste(EEGdir,'headerfile.csv',sep=''))){
+      osf_download(EEGfiles[n,],paste(EEGdir,'headerfile.csv',sep=''))
+    }}  
+}
 for (n in 1:nrow(PPfiles)){
-  if (pmatch(participant,as.character(PPfiles[n,1]))){
+  if (pmatch(participant,as.character(PPfiles[n,1]),nomatch=0)){
     if (!file.exists(paste(PPdir,as.character(PPfiles[n,1]),sep=''))){
   osf_download(PPfiles[n,],paste(PPdir,as.character(PPfiles[n,1]),sep=''))
 }}}
 for (n in 1:nrow(Pyfiles)){
-  if (pmatch(participant,as.character(Pyfiles[n,1]))){
+  if (pmatch(participant,as.character(Pyfiles[n,1]),nomatch=0)){
     if (!file.exists(paste(Pydir,as.character(Pyfiles[n,1]),sep=''))){
       osf_download(Pyfiles[n,],paste(Pydir,as.character(Pyfiles[n,1]),sep=''))
 }}}
@@ -76,6 +81,7 @@ timeseq <- seq(1/120,10,length.out=120*10)
 EEGtimes <- seq(1/1000,10,1/1000)
 targetindex <- (2*10)+1
 maskindex <- (1.6*10)+1
+showEEG <- 0
 
 psychopyfiles <- dir(path=Pydir,pattern=participant)
 # EEGfiles <- dir(path=paste(datadirectory,'EEG/',participant,'/',sep=''),pattern='*.csv.gz')
@@ -90,6 +96,8 @@ for (block in 1:3){
   trialtimes <- psychoutput$trialonset - pupilstarttime
   condorder <- psychoutput$condition
   
+  if (file.exists(paste(EEGdir,participant,'_S',block,'_EEG.gz',sep=''))){
+    showEEG <- 1
   EEGdata <- read.csv(paste(EEGdir,participant,'_S',block,'_EEG.gz',sep=''))
   electrodes <- colnames(EEGdata)
   
@@ -114,6 +122,7 @@ for (block in 1:3){
         EEGwaveforms[block,ch,condorder[cond],] <- trial - mean(trial)
         EEGspectra[block,ch,condorder[cond],] <- fspec
       }}
+  }
   
   pdata <- read.csv(paste(PPdir,participant,'_S',block,'_pupil_positions.csv',sep=''))
   pdata2 <- pdata[,c(1,3,4,14)]
@@ -159,6 +168,7 @@ for (cond in 1:6){
     threshcut <- SDthresh*sd(absdiffs)
     cleanmasksP[cond,level] <- abs(mean(temp[which(absdiffs<threshcut)]))
 
+    if (showEEG){
     for (ch in 1:64){
     temp <- c(EEGtargets[,ch,startindex+level],EEGtargets[,ch,startindex+level+5])
     compmean <- mean(temp)
@@ -172,22 +182,24 @@ for (cond in 1:6){
     threshcut <- SDthresh*sd(absdiffs)
     cleanmasksE[ch,cond,level] <- abs(mean(temp[which(absdiffs<threshcut)]))
     }
+    }
   }
 }
 
-targetelectrodes <- c('POz','Oz','O1','O2')
-electrodeindices <- match(targetelectrodes,electrodes)-2
 contrastsdB <- 20*log10(c(6,12,24,48,96))
-
-targetstoplot <- apply(cleanmeansE[electrodeindices,,],c(2,3),mean,na.rm=TRUE)
-maskstoplot <- apply(cleanmasksE[electrodeindices,,],c(2,3),mean,na.rm=TRUE)
-
 colvect <- c('red','blue','darkgreen','grey','purple','orange')
 plotlims <- c(12,40,0,1)  # define the x and y limits of the plot (minx,maxx,miny,maxy)
 ticklocsx <- seq(12,40,6)    # locations of tick marks on x axis
 ticklocsy <- seq(0,1,0.2)    # locations of tick marks on y axis
 ticklabelsx <-ticklocsx        # set labels for x ticks
 ticklabelsy <- ticklocsy    # set labels for y ticks
+
+if (showEEG){
+targetelectrodes <- c('POz','Oz','O1','O2')
+electrodeindices <- match(targetelectrodes,electrodes)-2
+
+targetstoplot <- apply(cleanmeansE[electrodeindices,,],c(2,3),mean,na.rm=TRUE)
+maskstoplot <- apply(cleanmasksE[electrodeindices,,],c(2,3),mean,na.rm=TRUE)
 
 if(outputplot==2){pdf(paste(figdir,"CRF1e.pdf",sep=''), bg="transparent", height = 5.5, width = 5.5)}
 
@@ -342,7 +354,7 @@ lines(hdata$LearX,hdata$LearY,col="black",lwd=2)
 lines(hdata$RearX,hdata$RearY,col="black",lwd=2)
 
 if(outputplot>0){dev.off()}  # this line goes after you've finished plotting (to output the example below, move it to the bottom of the script)
-
+}
 
 
 
