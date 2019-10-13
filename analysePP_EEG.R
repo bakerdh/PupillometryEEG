@@ -1,7 +1,7 @@
 # WARNING: Each participant analysed will download around 1.3GB of data locally!
 # this script downloads and analyses pupillometry and EEG data 
 
-participant <- 'P303'
+participant <- 'P301'
 outputplot <- 2
 
 
@@ -46,7 +46,12 @@ for (n in 1:nrow(EEGfiles)){
   if (pmatch(participant,as.character(EEGfiles[n,1]),nomatch=0)){
     if (!file.exists(paste(EEGdir,as.character(EEGfiles[n,1]),sep=''))){
       osf_download(EEGfiles[n,],paste(EEGdir,as.character(EEGfiles[n,1]),sep=''))
-}}}
+    }}
+  if (pmatch('headerfile',as.character(EEGfiles[n,1]),nomatch=0)){
+    if (!file.exists(paste(EEGdir,as.character(EEGfiles[n,1]),sep=''))){
+      osf_download(EEGfiles[n,],paste(EEGdir,as.character(EEGfiles[n,1]),sep=''))
+    }}  
+}
 for (n in 1:nrow(PPfiles)){
   if (pmatch(participant,as.character(PPfiles[n,1]),nomatch=0)){
     if (!file.exists(paste(PPdir,as.character(PPfiles[n,1]),sep=''))){
@@ -78,8 +83,9 @@ targetindex <- (2*10)+1
 maskindex <- (1.6*10)+1
 showEEG <- 0
 
+hdata <- read.csv(paste(EEGdir,'headerfile.csv',sep=''),header=TRUE)
+
 psychopyfiles <- dir(path=Pydir,pattern=participant)
-# EEGfiles <- dir(path=paste(datadirectory,'EEG/',participant,'/',sep=''),pattern='*.csv.gz')
 
 for (block in 1:3){
   infofile <- read.csv(paste(PPdir,participant,'_S',block,'_info.csv',sep=''))
@@ -265,7 +271,6 @@ if(outputplot>0){dev.off()}  # this line goes after you've finished plotting (to
 
 
 
-hdata <- read.csv(paste(EEGdir,'headerfile.csv',sep=''),header=TRUE)
 
 xpos <- 1:64
 ypos <- 1:64
