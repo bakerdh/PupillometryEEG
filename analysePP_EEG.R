@@ -1,8 +1,8 @@
 # WARNING: Each participant analysed will download around 1.3GB of data locally!
 # this script downloads and analyses pupillometry and EEG data 
 
-participant <- 'P302'
-outputplot <- 0
+participant <- 'P303'
+outputplot <- 2
 
 
 localdir <- '~/Documents/local/'
@@ -34,24 +34,19 @@ osfproject <- osf_retrieve_node("tbema")
 componentlist <- osf_ls_nodes(osfproject)
 EEGID <- match('Raw EEG data',as.character(unlist(componentlist[,1])))
 EEGtoken <- componentlist[EEGID,2]
-EEGfiles <- osf_ls_files(EEGtoken)
+EEGfiles <- osf_ls_files(EEGtoken,n_max=300)
 PPID <- match('Raw pupillometry data',as.character(unlist(componentlist[,1])))
 PPtoken <- componentlist[PPID,2]
-PPfiles <- osf_ls_files(PPtoken)
+PPfiles <- osf_ls_files(PPtoken,n_max=300)
 PyID <- match('Psychopy logs',as.character(unlist(componentlist[,1])))
 Pytoken <- componentlist[PyID,2]
-Pyfiles <- osf_ls_files(Pytoken)
+Pyfiles <- osf_ls_files(Pytoken,n_max=300)
 
 for (n in 1:nrow(EEGfiles)){
   if (pmatch(participant,as.character(EEGfiles[n,1]),nomatch=0)){
     if (!file.exists(paste(EEGdir,as.character(EEGfiles[n,1]),sep=''))){
       osf_download(EEGfiles[n,],paste(EEGdir,as.character(EEGfiles[n,1]),sep=''))
-    }}
-  if (pmatch('header',as.character(EEGfiles[n,1]),nomatch=0)){
-    if (!file.exists(paste(EEGdir,'headerfile.csv',sep=''))){
-      osf_download(EEGfiles[n,],paste(EEGdir,'headerfile.csv',sep=''))
-    }}  
-}
+}}}
 for (n in 1:nrow(PPfiles)){
   if (pmatch(participant,as.character(PPfiles[n,1]),nomatch=0)){
     if (!file.exists(paste(PPdir,as.character(PPfiles[n,1]),sep=''))){
