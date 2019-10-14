@@ -1,7 +1,7 @@
 # WARNING: Each participant analysed will download around 1.3GB of data locally!
 # this script downloads and analyses pupillometry and EEG data 
 
-participant <- 'P301'
+participant <- 'P302'
 outputplot <- 2
 
 
