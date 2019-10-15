@@ -2,7 +2,7 @@
 # this script downloads and analyses pupillometry and EEG data 
 
 participant <- 'P302'
-outputplot <- 2
+outputplot <- 2    # 0 means plot to plot window, 1 means separate pdfs, 2 means combined pdf (via ps files)
 
 
 localdir <- '~/Documents/local/'
@@ -28,6 +28,8 @@ toinstall <- packagelist[which(!packagelist %in% (.packages()))]
 invisible(lapply(toinstall,library,character.only=TRUE))
 
 tic()
+
+if (!file.exists(paste(datadir,participant,'summary.RData',sep=''))){
 
 osf_auth(token = '3dEYuhZNmwWbG3xuhRIiVRo0T2oniOkEP3Ip8i1LPG4PNjeTRln54eGNAG7oyTT9xozWwJ')
 osfproject <- osf_retrieve_node("tbema")
@@ -65,6 +67,7 @@ for (n in 1:nrow(Pyfiles)){
 
 toc()
 
+tic()
 
 SDthresh <- 3
 legaltriggers <- 1
@@ -72,18 +75,16 @@ legaltriggers <- 1
 pupiltargets <- array(0,dim=c(3,2,60))
 pupilmasks <- pupiltargets
 pupilwaveforms <- array(0,dim=c(3,2,60,1200))
-pupilspectra <- pupilwaveforms
+pupilspectra <- array(0,dim=c(3,2,60,300))
 EEGtargets <- array(0,dim=c(3,64,60))
 EEGmasks <- EEGtargets
 EEGwaveforms <- array(0,dim=c(3,64,60,10000))
-EEGspectra <- EEGwaveforms
+EEGspectra <- array(0,dim=c(3,64,60,300))
 timeseq <- seq(1/120,10,length.out=120*10)
 EEGtimes <- seq(1/1000,10,1/1000)
 targetindex <- (2*10)+1
 maskindex <- (1.6*10)+1
 showEEG <- 0
-
-hdata <- read.csv(paste(EEGdir,'headerfile.csv',sep=''),header=TRUE)
 
 psychopyfiles <- dir(path=Pydir,pattern=participant)
 
@@ -121,7 +122,7 @@ for (block in 1:3){
         EEGtargets[block,ch,condorder[cond]] <- fspec[targetindex]
         EEGmasks[block,ch,condorder[cond]] <- fspec[maskindex]
         EEGwaveforms[block,ch,condorder[cond],] <- trial - mean(trial)
-        EEGspectra[block,ch,condorder[cond],] <- fspec
+        EEGspectra[block,ch,condorder[cond],1:300] <- fspec[1:300]
       }}
   }
   
@@ -144,7 +145,7 @@ for (block in 1:3){
         pupiltargets[block,eye,condorder[cond]] <- fspec[targetindex]
         pupilmasks[block,eye,condorder[cond]] <- fspec[maskindex]
         pupilwaveforms[block,eye,condorder[cond],] <- resampled - mean(resampled)
-        pupilspectra[block,eye,condorder[cond],] <- fspec
+        pupilspectra[block,eye,condorder[cond],1:300] <- fspec[1:300]
       }}}
 }
 
@@ -187,6 +188,16 @@ for (cond in 1:6){
   }
 }
 
+meanspectraP <- apply(pupilspectra,3:4,mean,na.rm=TRUE)
+meanspectraE <- apply(EEGspectra,2:4,mean,na.rm=TRUE)
+save(file=paste(datadir,participant,'summary.RData',sep=''),list=c('cleanmeansP','cleanmeansE','cleanmasksP','cleanmasksE','meanspectraP','meanspectraE'))
+
+toc()
+}
+
+load(paste(datadir,participant,'summary.RData',sep=''))
+hdata <- read.csv(paste(EEGdir,'headerfile.csv',sep=''),header=TRUE)
+
 contrastsdB <- 20*log10(c(6,12,24,48,96))
 colvect <- c('red','blue','darkgreen','grey','purple','orange')
 plotlims <- c(12,40,0,1)  # define the x and y limits of the plot (minx,maxx,miny,maxy)
@@ -202,7 +213,8 @@ electrodeindices <- match(targetelectrodes,electrodes)-2
 targetstoplot <- apply(cleanmeansE[electrodeindices,,],c(2,3),mean,na.rm=TRUE)
 maskstoplot <- apply(cleanmasksE[electrodeindices,,],c(2,3),mean,na.rm=TRUE)
 
-if(outputplot==2){pdf(paste(figdir,"CRF1e.pdf",sep=''), bg="transparent", height = 5.5, width = 5.5)}
+if(outputplot==1){pdf(paste(figdir,"CRF1e.pdf",sep=''), bg="transparent", height = 5.5, width = 5.5)}
+if(outputplot==2){postscript(paste(figdir,"CRF1e.ps",sep=''), horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 5.5)}
 
 par(pty="s")  # make axis square
 plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])   # create an empty axis of the correct dimensions
@@ -224,7 +236,8 @@ legend(12,1,c('Mon','Bin','Dich'),pch=21,pt.bg=colvect[1:3],pt.lwd=3,pt.cex=1.6,
 if(outputplot>0){dev.off()}  # this line goes after you've finished plotting (to output the example below, move it to the bottom of the script)
 
 
-if(outputplot==2){pdf(paste(figdir,"CRF2e.pdf",sep=''), bg="transparent", height = 5.5, width = 5.5)}
+if(outputplot==1){pdf(paste(figdir,"CRF2e.pdf",sep=''), bg="transparent", height = 5.5, width = 5.5)}
+if(outputplot==2){postscript(paste(figdir,"CRF2e.ps",sep=''), horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 5.5)}
 
 par(pty="s")  # make axis square
 plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])   # create an empty axis of the correct dimensions
@@ -247,8 +260,8 @@ legend(12,1,c('Mon','Bin X','Dich X'),pch=21,pt.bg=colvect[condlist],pt.lwd=3,pt
 if(outputplot>0){dev.off()}  # this line goes after you've finished plotting (to output the example below, move it to the bottom of the script)
 
 
-
-if(outputplot==2){pdf(paste(figdir,"CRF3e.pdf",sep=''), bg="transparent", height = 5.5, width = 5.5)}
+if(outputplot==1){pdf(paste(figdir,"CRF3e.pdf",sep=''), bg="transparent", height = 5.5, width = 5.5)}
+if(outputplot==2){postscript(paste(figdir,"CRF3e.ps",sep=''), horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 5.5)}
 
 par(pty="s")  # make axis square
 plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])   # create an empty axis of the correct dimensions
@@ -366,7 +379,8 @@ ticklocsy <- seq(0,0.04,0.01)    # locations of tick marks on y axis
 ticklabelsx <-ticklocsx        # set labels for x ticks
 ticklabelsy <- ticklocsy    # set labels for y ticks
 
-if(outputplot==2){pdf(paste(figdir,"CRF1p.pdf",sep=''), bg="transparent", height = 5.5, width = 5.5)}
+if(outputplot==1){pdf(paste(figdir,"CRF1p.pdf",sep=''), bg="transparent", height = 5.5, width = 5.5)}
+if(outputplot==2){postscript(paste(figdir,"CRF1p.ps",sep=''), horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 5.5)}
 
 par(pty="s")  # make axis square
 plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])   # create an empty axis of the correct dimensions
@@ -387,8 +401,8 @@ for (cond in 1:3){
 legend(12,0.04,c('Mon','Bin','Dich'),pch=21,pt.bg=colvect[1:3],pt.lwd=3,pt.cex=1.6,box.lwd=2)
 if(outputplot>0){dev.off()}  # this line goes after you've finished plotting (to output the example below, move it to the bottom of the script)
 
-
-if(outputplot==2){pdf(paste(figdir,"CRF2p.pdf",sep=''), bg="transparent", height = 5.5, width = 5.5)}
+if(outputplot==1){pdf(paste(figdir,"CRF2p.pdf",sep=''), bg="transparent", height = 5.5, width = 5.5)}
+if(outputplot==2){postscript(paste(figdir,"CRF2p.ps",sep=''), horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 5.5)}
 
 par(pty="s")  # make axis square
 plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])   # create an empty axis of the correct dimensions
@@ -411,8 +425,8 @@ legend(12,0.04,c('Mon','Bin X','Dich X'),pch=21,pt.bg=colvect[condlist],pt.lwd=3
 if(outputplot>0){dev.off()}  # this line goes after you've finished plotting (to output the example below, move it to the bottom of the script)
 
 
-
-if(outputplot==2){pdf(paste(figdir,"CRF3p.pdf",sep=''), bg="transparent", height = 5.5, width = 5.5)}
+if(outputplot==1){pdf(paste(figdir,"CRF3p.pdf",sep=''), bg="transparent", height = 5.5, width = 5.5)}
+if(outputplot==2){postscript(paste(figdir,"CRF3p.ps",sep=''), horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 5.5)}
 
 par(pty="s")  # make axis square
 plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])   # create an empty axis of the correct dimensions
