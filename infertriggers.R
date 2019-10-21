@@ -14,12 +14,12 @@ toinstall <- packagelist[which(!packagelist %in% (.packages()))]
 invisible(lapply(toinstall,library,character.only=TRUE))
 
 
-localdir <- '~/Documents/local/'
-EEGdir <- '~/Documents/local/EEG/'
-PPdir <- '~/Documents/local/Pupil/'
-Pydir <- '~/Documents/local/Psychopy/'
-figdir <- '~/Documents/local/Figures/'
-datadir <- '~/Documents/local/Data/'
+localdir <- 'local/'
+EEGdir <- '/local/EEG/'
+PPdir <- 'local/Pupil/'
+Pydir <- 'local/Psychopy/'
+figdir <- 'local/Figures/'
+datadir <- 'local/Data/'
 
 
 infofile <- read.csv(paste(PPdir,participant,'_S',block,'_info.csv',sep=''))
