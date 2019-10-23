@@ -133,7 +133,7 @@ for (block in 1:3){
   pdata <- read.csv(paste(PPdir,participant,'_S',block,'_pupil_positions.csv',sep=''))
   pdata2 <- pdata[,c(1,3,4,14)]
   pdata2[,1] <- pdata2[,1] - localstarttime
-  pdata2 <- pdata2[which(pdata2[,3]>0.2),]
+  pdata2 <- pdata2[which(pdata2[,3]>0.0),]
 
   for (eye in 1:2){
     eyedata <- pdata2[which(pdata2[,2]==(2-eye)),]
