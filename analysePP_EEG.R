@@ -1,7 +1,7 @@
 # WARNING: Each participant analysed will download around 1.3GB of data locally!
 # this script downloads and analyses pupillometry and EEG data 
 
-participant <- 'P305'
+participant <- 'P310'
 outputplot <- 2    # 0 means plot to plot window, 1 means separate pdfs, 2 means combined pdf (via ps files)
 
 localdir <- 'local/'    # all files are stored in the project directory /local/ which git is told to ignore
