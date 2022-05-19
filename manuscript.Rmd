@@ -1,0 +1,70 @@
+---
+title: "manuscript"
+author: "Federico Segala, Aurelio Bruno, Alex Wade, Daniel Baker"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Abstract
+
+
+## Introduction
+
+
+## Methods
+
+
+### Participants
+
+### Apparatus & Stimuli
+
+Probably wants a figure here showing example stimuli, maybe some sine waves, and perhaps some stills of large and small pupils taken through the eyetracker (I think we used these on the ECVP poster last year).
+
+### Procedure
+
+### Data analysis
+
+
+
+## Results
+
+### Experiment 1
+
+I'd suggest the following figures:
+
+Summary of the pupillometry data with Fourier spectra, maybe an average waveform, and contrast response functions
+
+Summary of the first harmonic EEG data showing the same as for the pupils, maybe with embedded scalp plots inset in the Fourier spectrum
+
+Summary of the second harmonic EEG data showing the same as for the pupils, again with embedded scalp plots inset in the Fourier spectrum
+
+```{r}
+
+# example of how to embed R code in the markdown document
+
+a <- 1
+
+```
+
+
+### Experiment 2
+
+Figure showing summary of data from the experiment with different temporal frequencies
+
+
+### Experiment 3
+
+Figure summarising the matching results (probably averaged across participants)
+
+### Computational modelling
+
+Probably makes sense to explain the modelling after presenting the data. We might plot the model curves in the figures above, but then here have a summary figure with the posterior distributions of the interocular suppression parameter across four data sets.
+
+
+## Discussion
+
+## References
