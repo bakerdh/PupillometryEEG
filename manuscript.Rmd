@@ -1,73 +1,1149 @@
 ---
-title: "manuscript"
-author: "Federico Segala, Aurelio Bruno, Alex Wade, Daniel Baker"
+title: "Different rules for binocular combination of luminance in cortical and subcortical pathways"
+author: "Federico G. Segala, Aurelio Bruno, Alex R. Wade &  Daniel H. Baker"
 date: "`r Sys.Date()`"
 output:
+  bookdown::pdf_document2:
+    fig_caption: yes
+    toc: no
+    keep_tex: yes
   word_document: default
+  pdf_document:
+    toc: no
   html_document: default
-  pdf_document: default
+bibliography: references.bib
+csl: elife.csl
 ---
 
 ```{r setup, include=FALSE}
+
+processdata <- 0  # this flag determines the amount of processing, with 4 levels:
+# 0 - do no processing, generate the pdf using existing versions of all figures
+# 1 - generate figures using the processed group data (requires XGB of storage)
+# 2 - average data across participants, do bootstrapping and modelling
+# 3 - download all raw data and analyse (requires XGB of storage)
+
+# reasonably compact code to check which packages are installed, install the missing ones, and activate all
+packagelist <- c('knitr','remotes','tictoc','R.matlab','bookdown','grImport','tiff','pals','ez','gtools','signal','boot') # list of CRAN packages
+missingpackages <- packagelist[!packagelist %in% installed.packages()[,1]]
+if (length(missingpackages)>0){install.packages(missingpackages)}
+if (!'osfr' %in% installed.packages()[,1]){remotes::install_github("centerforopenscience/osfr")}
+if (!'FourierStats' %in% installed.packages()[,1]){remotes::install_github("bakerdh/FourierStats")}
+packagelist <- c(packagelist,'osfr','FourierStats')
+toinstall <- packagelist[which(!packagelist %in% (.packages()))]
+invisible(lapply(toinstall,library,character.only=TRUE))
+
 knitr::opts_chunk$set(echo = TRUE)
+
+# helper function to make colours transparent
+addalpha <- function(col, alpha=1){apply(sapply(col, col2rgb)/255, 2, function(x) rgb(x[1], x[2], x[3], alpha=alpha))}
+
+
+v4Interp <- function(df, xo, yo, rmax = .75, gridRes = 67) {
+  ## Create a function to perform Matlab's v4 interpolation.
+  ## Takes as input a data-frame with columns x, y, and z (x co-ordinates, y co-ordinates, and amplitude)
+  ## and variables xo and yo, the co-ordinates which will be use to create a grid for interpolation
+  xo <- matrix(rep(xo,length(yo)),nrow = length(xo),ncol = length(yo))
+  yo <- t(matrix(rep(yo,length(xo)),nrow = length(yo),ncol = length(xo)))
+  xy <- df$x + df$y*sqrt(as.complex(-1))
+  d <- matrix(rep(xy,length(xy)),nrow = length(xy), ncol = length(xy))
+  d <- abs(d - t(d))
+  diag(d) <- 1
+  g <- (d^2) * (log(d)-1)   # Green's function.
+  diag(g) <- 0
+  weights <- qr.solve(g,df$z)
+  xy <- t(xy)
+  outmat <- matrix(nrow = gridRes,ncol = gridRes)
+  for (i in 1:gridRes){
+    for (j in 1:gridRes) {
+      test4 <- abs((xo[i,j] + sqrt(as.complex(-1))*yo[i,j]) - xy)
+      g <- (test4^2) * (log(test4)-1)
+      outmat[i,j] <- g %*% weights}}
+  outDf <- data.frame(x = xo[,1],outmat)
+  names(outDf)[1:length(yo[1,])+1] <- yo[1,]
+  return(outDf)}
+
+colpal <- c('#FE5000','#8783CF','#228B22','#808080','#6d008b','#8B8000')
+targetelectrodes <- c('Oz','POz','O1','O2')
+
+localdir <- 'local/'    # all files are stored in the project directory /local/ which git is told to ignore
+if (!file.exists(localdir)){dir.create(localdir)}   # create a local directory to store data and outputs
+rawdir <- 'local/rawdata/'
+if (!file.exists(rawdir)){dir.create(rawdir)}   # create a local directory to store raw data
+matchdir <- 'local/Matching/'
+if (!file.exists(matchdir)){dir.create(matchdir)}   # create a local directory to store matching data
+TFdir <- 'local/TFdata/'
+if (!file.exists(TFdir)){dir.create(TFdir)}   # create a local directory to store  data from the temporal frequency experiment
+figdir <- 'local/Figures/'
+if (!file.exists(figdir)){dir.create(figdir)}   # create a local directory to store figures
+datadir <- 'local/Data/'
+if (!file.exists(datadir)){dir.create(datadir)}   # create a local directory to store processed data
+
+# cut off for data inclusion (Mahalanobis distance for complex data)
+SDthresh <- 3
+nbootstraps <- 1000
+
 ```
 
-## Abstract
+# Abstract
 
 
-## Introduction
+# Introduction
 
 
-## Methods
+# Methods
 
 
-### Participants
+## Participants
 
-### Apparatus & Stimuli
-
-Probably wants a figure here showing example stimuli, maybe some sine waves, and perhaps some stills of large and small pupils taken through the eyetracker (I think we used these on the ECVP poster last year).
-
-### Procedure
-
-### Data analysis
+## Apparatus & Stimuli
 
 
 
-## Results
+## Procedure
 
-### Experiment 1
-nonsense
-I'd suggest the following figures:
+## Data analysis
 
-Summary of the pupillometry data with Fourier spectra, maybe an average waveform, and contrast response functions
+@Baker2021
 
-Summary of the first harmonic EEG data showing the same as for the pupils, maybe with embedded scalp plots inset in the Fourier spectrum
+# Results
 
-Summary of the second harmonic EEG data showing the same as for the pupils, again with embedded scalp plots inset in the Fourier spectrum
+## Experiment 1
 
-```{r}
+```{r include=FALSE, results='hide'}
 
-# example of how to embed R code in the markdown document
+# (download and) analyse individual participant data for experiment 1
 
-a <- 1
+if (processdata > 2){
+  
+legaltriggers <- 1
+
+timeseq <- seq(1/120,10,length.out=120*10)
+timeseq2 <- seq(1/120,14,length.out=120*14)
+EEGtimes <- seq(1/1000,10,1/1000)
+targetindex <- (2*10)+1
+maskindex <- (1.6*10)+1
+targetindex2 <- (2*2*10)+1
+maskindex2 <- (2*1.6*10)+1
+
+  for (participant in 1:30){
+    
+    # only download and process data if this has not been done already for this participant
+    if (!file.exists(paste0(datadir,'P',100+participant,'summary.RData'))){   
+
+      # if there is no directory for this participant's data
+      if (!file.exists(paste0(rawdir,'P',100+participant))){
+        dir.create(paste0(rawdir,'P',100+participant))
+        
+       d <- dir(paste0(rawdir,'P',100+participant))
+       
+       if (length(d)==0){
+         
+         # if the tar file of this participant's data doesn't exist
+         if (!file.exists(paste0(rawdir,'P',100+participant,'.tar'))){
+           # download it from OSF
+           
+         }
+         
+         # then unzip the tar file
+         untar(paste0(rawdir,'P',100+participant,'.tar'),exdir=paste0(rawdir,'P',100+participant))
+         
+         # and delete the tar file to save storage space
+         file.remove(paste0(rawdir,'P',100+participant,'.tar'))
+       }
+      
+      d <- dir(paste0(rawdir,'P',100+participant),full.names=TRUE)
+       
+      pupiltargets <- array(0,dim=c(3,2,60))
+pupilmasks <- pupiltargets
+pupilwaveforms <- array(0,dim=c(3,2,60,120*14))
+pupilspectra <- array(0,dim=c(3,2,60,300))
+EEGtargets <- array(0,dim=c(3,64,60))
+EEGmasks <- EEGtargets
+EEGtargets2 <- EEGtargets
+EEGmasks2 <- EEGtargets
+EEGwaveforms <- array(0,dim=c(3,64,60,1000*14))
+EEGspectra <- array(0,dim=c(3,64,60,300))
+
+psychopyfiles <- dir(path=paste0(rawdir,'P',100+participant),pattern=paste0('P',100+participant,'_CRFstudy'), full.names = TRUE)
+infofiles <- dir(path=paste0(rawdir,'P',100+participant),pattern='*_info.csv', full.names = TRUE)
+EEGfiles <- dir(path=paste0(rawdir,'P',100+participant),pattern='*_EEG.csv.gz', full.names = TRUE)
+pupilfiles <- dir(path=paste0(rawdir,'P',100+participant),pattern='*_pupil_positions.csv', full.names = TRUE)
+
+for (block in 1:length(EEGfiles)){
+  
+    infofile <- read.csv(infofiles[block])
+  pupilstarttime <- as.numeric(as.character(infofile[4,2]))
+  localstarttime <- as.numeric(as.character(infofile[5,2]))
+  
+  psychoutput <- read.csv(psychopyfiles[block])
+
+  trialtimes <- psychoutput$trialonset - pupilstarttime
+  condorder <- psychoutput$condition
+  
+    EEGdata <- read.csv(EEGfiles[block])
+  electrodes <- colnames(EEGdata)
+  
+      triggertimes <- NULL
+    counter <- 0
+    lasttrigger <- -10000
+    for (n in 1:nrow(EEGdata)){
+      if(EEGdata$Trigger[n] %in% legaltriggers){
+        if(n>(lasttrigger+10000)){
+        counter <- counter + 1
+        triggertimes[counter] <- n
+        lasttrigger <- n
+      }}
+    }
+  
+    for (cond in 1:60){
+      for (ch in 1:64){
+        trial <- EEGdata[(triggertimes[cond]+(2001:12000)),ch+2]
+        fspec <- (fft(trial)/length(trial))
+        EEGtargets[block,ch,condorder[cond]] <- fspec[targetindex]
+        EEGmasks[block,ch,condorder[cond]] <- fspec[maskindex]
+        EEGtargets2[block,ch,condorder[cond]] <- fspec[targetindex2]
+        EEGmasks2[block,ch,condorder[cond]] <- fspec[maskindex2]
+        EEGspectra[block,ch,condorder[cond],1:300] <- fspec[1:300]
+        
+        trial <- EEGdata[(triggertimes[cond]+(-999:13000)),ch+2]
+        EEGwaveforms[block,ch,condorder[cond],] <- trial - mean(trial[1:1000])
+      }}
+    
+    
+  pdata <- read.csv(pupilfiles[block])
+  pdata2 <- pdata[,c(1,3,4,14)]
+  pdata2[,1] <- pdata2[,1] - localstarttime
+  pdata2 <- pdata2[which(pdata2[,3]>0.0),]
+
+  for (eye in 1:2){
+    eyedata <- pdata2[which(pdata2[,2]==(2-eye)),]
+    for (cond in 1:60){
+      a <- which(eyedata[,1]>trialtimes[cond]+2)
+      b <- which(eyedata[,1]<(trialtimes[cond]+12))
+      i <- intersect(a,b)
+      trial <- eyedata[i,]
+      trial[,1] <- trial[,1] - trial[1,1]
+      if (nrow(trial)>3){
+        resampled <- interp1(trial[,1],trial[,4],timeseq,method='linear',extrap=TRUE)
+        fspec <- (fft(resampled)/length(resampled))
+        pupiltargets[block,eye,condorder[cond]] <- fspec[targetindex]
+        pupilmasks[block,eye,condorder[cond]] <- fspec[maskindex]
+        pupilspectra[block,eye,condorder[cond],1:300] <- fspec[1:300]
+      }
+      
+      a <- which(eyedata[,1]>(trialtimes[cond]-1))
+      b <- which(eyedata[,1]<(trialtimes[cond]+13))
+      i <- intersect(a,b)
+      trial <- eyedata[i,]
+      trial[,1] <- trial[,1] - trial[1,1]
+      if (nrow(trial)>3){
+        resampled <- interp1(trial[,1],trial[,4],timeseq2,method='linear',extrap=TRUE)
+        pupilwaveforms[block,eye,condorder[cond],] <- resampled - mean(resampled[1:120])
+      }
+      
+      }}
+  
+}
+
+cleanmeansP <- matrix(0,nrow=6,ncol=5)
+cleanmasksP <- matrix(0,nrow=6,ncol=5)
+cleanmeansE <- array(0,dim=c(64,6,5))
+cleanmasksE <- array(0,dim=c(64,6,5))
+cleanmeansE2 <- array(0,dim=c(64,6,5))
+cleanmasksE2 <- array(0,dim=c(64,6,5))
+
+for (cond in 1:6){
+  startindex <- (10*(cond-1))
+  for (level in 1:5){
+    temp <- c(pupiltargets[,,startindex+level],pupiltargets[,,startindex+level+5])
+        cartdata <- data.frame(Re(temp),Im(temp))
+    if (sum(cartdata)!=0){
+      D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
+      i <- which(D<SDthresh) 
+    cleanmeansP[cond,level] <- mean(temp[i])}
+
+    temp <- c(pupilmasks[,,startindex+level],pupiltargets[,,startindex+level+5])
+        cartdata <- data.frame(Re(temp),Im(temp))
+    if (sum(cartdata)!=0){
+      D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
+      i <- which(D<SDthresh) 
+    cleanmasksP[cond,level] <- mean(temp[i])}
+
+    for (ch in 1:64){
+    temp <- c(EEGtargets[,ch,startindex+level],EEGtargets[,ch,startindex+level+5])
+            cartdata <- data.frame(Re(temp),Im(temp))
+    if (sum(cartdata)!=0){
+      D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
+      i <- which(D<SDthresh) 
+    cleanmeansE[ch,cond,level] <- mean(temp[i])}
+    
+    temp <- c(EEGmasks[,ch,startindex+level],EEGmasks[,ch,startindex+level+5])
+                cartdata <- data.frame(Re(temp),Im(temp))
+    if (sum(cartdata)!=0){
+      D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
+      i <- which(D<SDthresh) 
+    cleanmasksE[ch,cond,level] <- mean(temp[i])}
+    
+    temp <- c(EEGtargets2[,ch,startindex+level],EEGtargets2[,ch,startindex+level+5])
+                cartdata <- data.frame(Re(temp),Im(temp))
+    if (sum(cartdata)!=0){
+      D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
+      i <- which(D<SDthresh) 
+    cleanmeansE2[ch,cond,level] <- mean(temp[i])}
+    
+    temp <- c(EEGmasks2[,ch,startindex+level],EEGmasks2[,ch,startindex+level+5])
+                cartdata <- data.frame(Re(temp),Im(temp))
+    if (sum(cartdata)!=0){
+      D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
+      i <- which(D<SDthresh) 
+    cleanmasksE2[ch,cond,level] <- mean(temp[i])}   
+    }
+
+  }
+}
+
+electrodeindices <- match(targetelectrodes,electrodes)-2
+
+meanwavesP <- apply(pupilwaveforms[,,c(15,20),],4,mean,na.rm=TRUE)
+meanwavesE <- apply(EEGwaveforms[,electrodeindices,c(15,20),],4,mean,na.rm=TRUE)
+meanspectraP <- apply(pupilspectra[,,c(15,20),],4,mean,na.rm=TRUE)
+meanspectraE <- apply(EEGspectra[,electrodeindices,c(15,20),],4,mean,na.rm=TRUE)
+save(file=paste(datadir,'P',100+participant,'summary.RData',sep=''),list=c('cleanmeansP','cleanmeansE','cleanmeansE2','cleanmasksP','cleanmasksE','cleanmasksE2','meanspectraP','meanspectraE','meanwavesP','meanwavesE','electrodes'))
+
+      }
+        
+        
+      }
+      
+    
+    }
+  }
+  
+
+
+```
+
+```{r include=FALSE, results='hide'}
+
+# load in individual participant data and average, save group data
+
+if (processdata > 1){
+
+hdata <- read.csv(paste0(EEGdir,'headerfile.csv'))  
+
+d <- dir(datadir,pattern='*summaryC.RData',full.names=TRUE)
+
+tempmasksP <- array(0,dim=c(length(d),6,5))
+tempmeansP <- tempmasksP
+tempmasksE <- array(0,dim=c(length(d),64,6,5))
+tempmeansE <- tempmasksE
+tempmeansE2 <- tempmeansE
+tempmasksE2 <- tempmasksE
+tempspectraP <- array(0,dim=c(length(d),300))
+tempspectraE <- array(0,dim=c(length(d),300))
+tempwavesP <- array(0,dim=c(length(d),1680))
+tempwavesE <- array(0,dim=c(length(d),14000))
+
+  for (s in 1:length(d)){
+    
+    load(d[s])
+    
+  tempmasksP[s,,] <- cleanmasksP
+  tempmeansP[s,,] <- cleanmeansP
+  tempspectraP[s,] <- meanspectraP
+  tempspectraE[s,] <- meanspectraE
+  tempwavesP[s,] <- meanwavesP
+  tempwavesE[s,] <- meanwavesE
+  tempmeansE[s,,,] <- cleanmeansE
+  tempmasksE[s,,,] <- cleanmasksE
+  tempmeansE2[s,,,] <- cleanmeansE2
+  tempmasksE2[s,,,] <- cleanmasksE2
+    
+  }
+
+electrodeindices <- match(targetelectrodes,electrodes)-2
+
+tempspectraP <- tempspectraP[-c(2,4,13,20,26),]
+
+cleanmeansP <- matrix(0,nrow=6,ncol=5)
+cleanmeansPCI <- array(0,c(2,6,5))
+cleanmasksP <- matrix(0,nrow=6,ncol=5)
+cleanmasksPCI <- array(0,c(2,6,5))
+cleanmeansEav <- matrix(0,nrow=6,ncol=5)
+cleanmeansEavCI <- array(0,c(2,6,5))
+cleanmasksEav <- matrix(0,nrow=6,ncol=5)
+cleanmasksEavCI <- array(0,c(2,6,5))
+cleanmeansE2av <- matrix(0,nrow=6,ncol=5)
+cleanmeansE2avCI <- array(0,c(2,6,5))
+cleanmasksE2av <- matrix(0,nrow=6,ncol=5)
+cleanmasksE2avCI <- array(0,c(2,6,5))
+cleanmeansE <- array(0,dim=c(64,6,5))
+cleanmeansECI <- array(0,c(2,64,6,5))
+cleanmasksE <- array(0,dim=c(64,6,5))
+cleanmasksECI <- array(0,c(2,64,6,5))
+cleanmeansE2 <- array(0,dim=c(64,6,5))
+cleanmeansE2CI <- array(0,c(2,64,6,5))
+cleanmasksE2 <- array(0,dim=c(64,6,5))
+cleanmasksE2CI <- array(0,c(2,64,6,5))
+
+
+for (cond in 1:6){
+  for (level in 1:5){
+    
+    temp <- tempmeansP[,cond,level]
+    cartdata <- data.frame(Re(temp),Im(temp))
+    if (sum(cartdata)!=0){
+      D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
+      i <- which(D<SDthresh) 
+    mbs <- amperrors(temp[i],method='boot',quantiles=95,nresamples=nbootstraps)
+    cleanmeansP[cond,level] <- mbs$meanamp
+    cleanmeansPCI[1,cond,level] <- mbs$lowerCI
+    cleanmeansPCI[2,cond,level] <- mbs$upperCI
+    }    
+      
+    temp <- tempmasksP[,cond,level]
+    cartdata <- data.frame(Re(temp),Im(temp))
+    if (sum(cartdata)!=0){
+      D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
+      i <- which(D<SDthresh) 
+      
+          mbs <- amperrors(temp[i],method='boot',quantiles=95,nresamples=nbootstraps)
+    cleanmasksP[cond,level] <- mbs$meanamp
+    cleanmasksPCI[1,cond,level] <- mbs$lowerCI
+    cleanmasksPCI[2,cond,level] <- mbs$upperCI
+}
+  
+    
+      temp <- apply(tempmeansE[,electrodeindices,cond,level],1,mean)
+      cartdata <- data.frame(Re(temp),Im(temp))
+      if (sum(cartdata)!=0){
+        D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
+        i <- which(D<SDthresh) 
+    mbs <- amperrors(temp[i],method='boot',quantiles=95,nresamples=nbootstraps)
+    cleanmeansEav[cond,level] <- mbs$meanamp
+    cleanmeansEavCI[1,cond,level] <- mbs$lowerCI
+    cleanmeansEavCI[2,cond,level] <- mbs$upperCI
+      }
+      
+temp <- apply(tempmasksE[,electrodeindices,cond,level],1,mean)
+      cartdata <- data.frame(Re(temp),Im(temp))
+      if (sum(cartdata)!=0){
+        D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
+        i <- which(D<SDthresh) 
+mbs <- amperrors(temp[i],method='boot',quantiles=95,nresamples=nbootstraps)
+    cleanmasksEav[cond,level] <- mbs$meanamp
+    cleanmasksEavCI[1,cond,level] <- mbs$lowerCI
+    cleanmasksEavCI[2,cond,level] <- mbs$upperCI
+        }
+
+temp <- apply(tempmeansE2[,electrodeindices,cond,level],1,mean)
+      cartdata <- data.frame(Re(temp),Im(temp))
+      if (sum(cartdata)!=0){
+        D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
+        i <- which(D<SDthresh) 
+    mbs <- amperrors(temp[i],method='boot',quantiles=95,nresamples=nbootstraps)
+    cleanmeansE2av[cond,level] <- mbs$meanamp
+    cleanmeansE2avCI[1,cond,level] <- mbs$lowerCI
+    cleanmeansE2avCI[2,cond,level] <- mbs$upperCI
+        }
+
+      temp <- apply(tempmasksE2[,electrodeindices,cond,level],1,mean)
+      cartdata <- data.frame(Re(temp),Im(temp))
+      if (sum(cartdata)!=0){
+        D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
+        i <- which(D<SDthresh) 
+    mbs <- amperrors(temp[i],method='boot',quantiles=95,nresamples=nbootstraps)
+    cleanmasksE2av[cond,level] <- mbs$meanamp
+    cleanmasksE2avCI[1,cond,level] <- mbs$lowerCI
+    cleanmasksE2avCI[2,cond,level] <- mbs$upperCI
+        }
+      
+    for (ch in 1:64){
+      
+      temp <- tempmeansE[,ch,cond,level]
+      cartdata <- data.frame(Re(temp),Im(temp))
+      if (sum(cartdata)!=0){
+        D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
+        i <- which(D<SDthresh) 
+    mbs <- amperrors(temp[i],method='boot',quantiles=95,nresamples=nbootstraps)
+    cleanmeansE[ch,cond,level] <- mbs$meanamp
+    cleanmeansECI[1,ch,cond,level] <- mbs$lowerCI
+    cleanmeansECI[2,ch,cond,level] <- mbs$upperCI
+}
+
+      temp <- tempmasksE[,ch,cond,level]
+      cartdata <- data.frame(Re(temp),Im(temp))
+      if (sum(cartdata)!=0){
+        D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
+        i <- which(D<SDthresh) 
+mbs <- amperrors(temp[i],method='boot',quantiles=95,nresamples=nbootstraps)
+    cleanmasksE[ch,cond,level] <- mbs$meanamp
+    cleanmasksECI[1,ch,cond,level] <- mbs$lowerCI
+    cleanmasksECI[2,ch,cond,level] <- mbs$upperCI
+        }
+
+      temp <- tempmeansE2[,ch,cond,level]
+      cartdata <- data.frame(Re(temp),Im(temp))
+      if (sum(cartdata)!=0){
+        D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
+        i <- which(D<SDthresh) 
+    mbs <- amperrors(temp[i],method='boot',quantiles=95,nresamples=nbootstraps)
+    cleanmeansE2[ch,cond,level] <- mbs$meanamp
+    cleanmeansE2CI[1,ch,cond,level] <- mbs$lowerCI
+    cleanmeansE2CI[2,ch,cond,level] <- mbs$upperCI
+        }
+      
+      temp <- tempmasksE2[,ch,cond,level]
+      cartdata <- data.frame(Re(temp),Im(temp))
+      if (sum(cartdata)!=0){
+        D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
+        i <- which(D<SDthresh) 
+    mbs <- amperrors(temp[i],method='boot',quantiles=95,nresamples=nbootstraps)
+    cleanmasksE2[ch,cond,level] <- mbs$meanamp
+    cleanmasksE2CI[1,ch,cond,level] <- mbs$lowerCI
+    cleanmasksE2CI[2,ch,cond,level] <- mbs$upperCI
+        }
+      
+    }}}
+
+meanspectraP <- NULL
+meanspectraE <- NULL
+meanspectraPCI <- array(0,c(2,300))
+meanspectraECI <- array(0,c(2,300))
+
+for (f in 1:300){
+  
+mbs <- amperrors(tempspectraP[,f],method='boot',quantiles=95,nresamples=nbootstraps)
+meanspectraP[f] <- mbs$meanamp
+meanspectraPCI[1,f] <- mbs$lowerCI
+meanspectraPCI[2,f] <- mbs$upperCI
+
+mbs <- amperrors(tempspectraE[,f],method='boot',quantiles=95,nresamples=nbootstraps)
+meanspectraE[f] <- mbs$meanamp
+meanspectraECI[1,f] <- mbs$lowerCI
+meanspectraECI[2,f] <- mbs$upperCI
+   
+}
+
+meanwavesP <- apply(tempwavesP,2,mean)
+meanwavesE <- apply(tempwavesE,2,mean)
+meanwavesPCI <- array(0,dim=c(2,length(meanwavesP)))
+meanwavesECI <- array(0,dim=c(2,length(meanwavesE)))
+nsubjs <- dim(tempwavesP)[1]
+for (t in 1:length(meanwavesP)){
+  bspop <- NULL
+  for (s in 1:nbootstraps){bspop[s] <- mean(sample(tempwavesP[,t],nsubjs,replace=TRUE))}
+  meanwavesPCI[,t] <- quantile(bspop,c(0.025,0.975))
+}
+for (t in 1:length(meanwavesE)){
+  bspop <- NULL
+  for (s in 1:nbootstraps){bspop[s] <- mean(sample(tempwavesE[,t],nsubjs,replace=TRUE))}
+  meanwavesECI[,t] <- quantile(bspop,c(0.025,0.975))
+}
+
+save(file=paste0(datadir,'Averagedata.RData'),list=c('cleanmeansP','cleanmeansPCI','cleanmasksP','cleanmasksPCI','cleanmeansEav','cleanmeansEavCI','cleanmasksEav','cleanmasksEavCI','cleanmeansE2av','cleanmeansE2avCI','cleanmasksE2av','cleanmasksE2avCI','cleanmeansE','cleanmeansECI','cleanmasksECI','cleanmeansE2','cleanmeansE2CI','cleanmasksE2','cleanmasksE2CI','meanspectraP','meanspectraPCI','meanspectraE','meanspectraECI','meanwavesP','meanwavesE','meanwavesPCI','meanwavesECI','electrodes'))
+
+}
 
 ```
 
 
-### Experiment 2
+```{r include=FALSE, results='hide'}
+
+# generate plot showing the group pupillometry data
+
+if (processdata > 0){
+
+contrastsdB <- 20*log10(c(6,12,24,48,96))
+
+load(file=paste0(datadir,'Averagedata.RData'))
+  
+plotlims <- c(12,40,0,0.03)  # define the x and y limits of the plot (minx,maxx,miny,maxy)
+ticklocsx <- contrastsdB    # locations of tick marks on x axis
+ticklocsy <- seq(0,0.03,0.01)    # locations of tick marks on y axis
+ticklabelsx <-c(6,12,24,48,96)        # set labels for x ticks
+ticklabelsy <- ticklocsy    # set labels for y ticks
+
+postscript("CRF1p.ps", horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 5.5)
+
+par(pty="s")  # make axis square
+plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])   # create an empty axis of the correct dimensions
+axis(1, at=ticklocsx, tck=0.01, lab=F, lwd=2)     # plot tick marks (no labels)
+axis(2, at=ticklocsy, tck=0.01, lab=F, lwd=2)
+mtext(text = ticklabelsx, side = 1, at=ticklocsx)     # add the tick labels
+mtext(text = ticklabelsy, side = 2, at=ticklocsy, line=0.2, las=1) 
+title(xlab="Target contrast (%)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)    # titles for axes
+title(ylab="Amplitude at 2Hz (mm)", col.lab=rgb(0,0,0), line=1.8, cex.lab=1.5)
+
+for (cond in 1:3){
+  lines(contrastsdB,abs(cleanmeansP[cond,]), col=colpal[cond], lwd=3, cex=0.5)
+  arrows(contrastsdB,abs(cleanmeansP[cond,]),contrastsdB,cleanmeansPCI[1,cond,],lwd=3,col=colpal[cond],length=0.05,angle=90)
+  arrows(contrastsdB,abs(cleanmeansP[cond,]),contrastsdB,cleanmeansPCI[2,cond,],lwd=3,col=colpal[cond],length=0.05,angle=90)
+  points(contrastsdB,abs(cleanmeansP[cond,]), pch = 20+cond, col='black', bg=colpal[cond], cex=1.6, lwd=3)   # draw the data points themselves
+}  
+legend(19,0.03,c('Monocular','Binocular','Dichoptic'),pch=21:23,pt.bg=colpal[1:3],pt.lwd=3,pt.cex=1.6,box.lwd=2)
+text(14,0.028,'(c)',adj=0.5,cex=2.5)
+
+dev.off()
+
+postscript("CRF2p.ps", horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 5.5)
+
+par(pty="s")  # make axis square
+plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])   # create an empty axis of the correct dimensions
+axis(1, at=ticklocsx, tck=0.01, lab=F, lwd=2)     # plot tick marks (no labels)
+axis(2, at=ticklocsy, tck=0.01, lab=F, lwd=2)
+mtext(text = ticklabelsx, side = 1, at=ticklocsx)     # add the tick labels
+mtext(text = ticklabelsy, side = 2, at=ticklocsy, line=0.2, las=1)
+title(xlab="Target contrast (%)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)   
+title(ylab="Amplitude at 2Hz (mm)", col.lab=rgb(0,0,0), line=1.8, cex.lab=1.5)
+
+condlist <- c(1,5,6)
+pointlist <- c(21,24,25)
+for (cond in 1:3){
+  lines(contrastsdB,abs(cleanmeansP[condlist[cond],]), col=colpal[condlist[cond]], lwd=3, cex=0.5)  
+  arrows(contrastsdB,abs(cleanmeansP[condlist[cond],]),contrastsdB,cleanmeansPCI[1,condlist[cond],],lwd=3,col=colpal[condlist[cond]],length=0.05,angle=90)
+  arrows(contrastsdB,abs(cleanmeansP[condlist[cond],]),contrastsdB,cleanmeansPCI[2,condlist[cond],],lwd=3,col=colpal[condlist[cond]],length=0.05,angle=90)  
+  points(contrastsdB,abs(cleanmeansP[condlist[cond],]), pch = pointlist[cond], col='black', bg=colpal[condlist[cond]], cex=1.6, lwd=3)   
+}  
+legend(19,0.03,c('Monocular','Binocular cross','Dichoptic cross'),pch=pointlist,pt.bg=colpal[condlist],pt.lwd=3,pt.cex=1.6,box.lwd=2)
+text(14,0.028,'(d)',adj=0.5,cex=2.5)
+
+dev.off()
+
+
+postscript("CRF3p.ps", horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 5.5)
+
+par(pty="s")  # make axis square
+plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])   # create an empty axis of the correct dimensions
+axis(1, at=ticklocsx, tck=0.01, lab=F, lwd=2)     # plot tick marks (no labels)
+axis(2, at=ticklocsy, tck=0.01, lab=F, lwd=2)
+mtext(text = ticklabelsx, side = 1, at=ticklocsx)     # add the tick labels
+mtext(text = ticklabelsy, side = 2, at=ticklocsy, line=0.2, las=1)
+title(xlab="Target contrast (%)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)    # titles for axes
+title(ylab="Amplitude at 1.6Hz (mm)", col.lab=rgb(0,0,0), line=1.8, cex.lab=1.5)
+
+for (cond in 4:6){
+  lines(contrastsdB,abs(cleanmasksP[cond,]), col=colpal[cond], lwd=3, cex=0.5)   
+  arrows(contrastsdB,abs(cleanmasksP[cond,]),contrastsdB,cleanmasksPCI[1,cond,],lwd=3,col=colpal[cond],length=0.05,angle=90)
+  arrows(contrastsdB,abs(cleanmasksP[cond,]),contrastsdB,cleanmasksPCI[2,cond,],lwd=3,col=colpal[cond],length=0.05,angle=90)    
+  points(contrastsdB,abs(cleanmasksP[cond,]), pch = pointlist[cond-3], col='black', bg=colpal[cond], cex=1.6, lwd=3) 
+}
+legend(19,0.03,c('Monocular 1.6Hz','Binocular cross','Dichoptic cross'),pch=pointlist,pt.bg=colpal[4:6],pt.lwd=3,pt.cex=1.6,box.lwd=2)
+text(14,0.028,'(e)',adj=0.5,cex=2.5)
+
+dev.off()
+
+
+postscript("SpecP.ps", horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 8)
+
+frequencies <- (0:299)/10
+
+plotlims <- c(1,6,0,0.03) 
+ticklocsx <- seq(1,6,1)    # locations of tick marks on x axis
+ticklocsy <- seq(0,0.03,0.01)    # locations of tick marks on y axis
+ticklabelsx <-ticklocsx        # set labels for x ticks
+ticklabelsy <- ticklocsy    # set labels for y ticks
+
+plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])   # create an empty axis of the correct dimensions
+axis(1, at=ticklocsx, tck=0.01, lab=F, lwd=2)     # plot tick marks (no labels)
+axis(2, at=ticklocsy, tck=0.01, lab=F, lwd=2)
+mtext(text = ticklabelsx, side = 1, at=ticklocsx)     # add the tick labels
+mtext(text = ticklabelsy, side = 2, at=ticklocsy, line=0.2, las=1)  
+title(xlab="Frequency (Hz)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)  
+title(ylab="Amplitude (mm)", col.lab=rgb(0,0,0), line=1.8, cex.lab=1.5)
+
+polygon(frequencies[c(11:61,61:11)],c(meanspectraPCI[1,11:61],meanspectraPCI[2,61:11]),col=colpal[2],border=NA)
+
+lines(frequencies[11:61],abs(meanspectraP[11:61]), col=colpal[2], lwd=3, cex=0.5) 
+
+text(1.1,0.028,'(b)',adj=0.5,cex=2.5)
+
+dev.off()
+
+
+
+postscript("timecourseP.ps", horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 8)
+
+times <- seq((1/120)-1,13,1/120)
+sinewave <- sin(2*times * 2*pi)
+sinewave[1:120] <- 0
+sinewave[1560:1680] <- 0
+
+plotlims <- c(-1,13,-1,1) 
+ticklocsx <- seq(-1,13,1)    # locations of tick marks on x axis
+ticklocsy <- seq(-1,1,1)    # locations of tick marks on y axis
+ticklabelsx <- ticklocsx        # set labels for x ticks
+ticklabelsy <- ticklocsy    # set labels for y ticks
+
+plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])
+axis(1, at=ticklocsx, tck=0.01, lab=F, lwd=2)     # plot tick marks (no labels)
+axis(2, at=ticklocsy, tck=0.01, lab=F, lwd=2)
+mtext(text = ticklabelsx, side = 1, at=ticklocsx)     # add the tick labels
+mtext(text = ticklabelsy, side = 2, at=ticklocsy, line=0.2, las=1)  
+title(xlab="Time (s)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)  
+title(ylab="Amplitude (mm)", col.lab=rgb(0,0,0), line=1.8, cex.lab=1.5)
+
+# polygon(frequencies[c(11:51,51:11)],c(meanspectraPCI[1,11:51],meanspectraPCI[2,51:11]),col=colpal[2],border=NA)
+
+lines(times, sinewave, col='black', lwd=3) 
+
+text(-0.7,0.88,'(a)',adj=0.5,cex=2.5)
+
+dev.off()
+
+
+  PostScriptTrace('CRF1p.ps')
+  p1 <- readPicture('CRF1p.ps.xml')
+  PostScriptTrace('CRF2p.ps')
+  p2 <- readPicture('CRF2p.ps.xml')
+  PostScriptTrace('CRF3p.ps')
+  p3 <- readPicture('CRF3p.ps.xml')
+  PostScriptTrace('SpecP.ps')
+  p4 <- readPicture('SpecP.ps.xml')
+  PostScriptTrace('timecourseP.ps')
+  p5 <- readPicture('timecourseP.ps.xml')
+  
+    for (n in 1:length(p4@paths)){
+    temp <- class(p4@paths[n]$path)[1]
+    if (pmatch(temp,"PictureFill",nomatch=0)){
+      if (sum(col2rgb(p4@paths[n]$path@rgb))<765){p4@paths[n]$path@rgb <- addalpha(p4@paths[n]$path@rgb,alpha=0.2)}}}
+  
+  pdf(paste0(figdir,"pupildata.pdf"), bg="transparent", height = 10, width = 15)
+  par(mar=c(0.1,0.1,0.1,0.1))
+  plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=c(0,1), ylim=c(0,1))
+  
+  grid.picture(p1,x=0.17,y=0.25,width=0.32,height=1)
+  grid.picture(p2,x=0.5,y=0.25,width=0.32,height=1)
+  grid.picture(p3,x=0.83,y=0.25,width=0.32,height=1)
+  grid.picture(p5,x=0.25,y=0.7,width=0.5,height=1)
+  grid.picture(p4,x=0.75,y=0.7,width=0.5,height=1)
+  
+  text(0.5,0.98,'Pupillometry',cex=4)
+  
+  dev.off()
+  
+  file.remove(c('CRF1p.ps','CRF2p.ps','CRF3p.ps','SpecP.ps','timecourseP.ps'))
+  file.remove(c('CRF1p.ps.xml','CRF2p.ps.xml','CRF3p.ps.xml','SpecP.ps.xml','timecourseP.ps.xml'))
+
+
+
+}
+
+```
+
+```{r pupildata, fig.cap="Summary of pupillometry results for N=30 participants. Panel (a) shows a group average waveform for binocular presentation, with the driving signal plotted at the foot. Panel (b) shows the average Fourier spectrum. Panels (c,d) show contrast response functions at 2Hz for different conditions. Panel (e) shows contrast response functions at 1.6Hz for three conditions. Shaded regions and error bars indicate bootstrapped 95 percent confidence intervals.", fig.align="center", echo=FALSE}
+
+knitr::include_graphics('local/Figures/pupildata.pdf')
+
+```
+
+```{r include=FALSE, results='hide'}
+
+# generate plot showing the group EEG data
+
+if (processdata > 0){
+
+contrastsdB <- 20*log10(c(6,12,24,48,96))
+
+load(file=paste0(datadir,'Averagedata.RData'))
+
+electrodeindices <- match(targetelectrodes,electrodes)-2
+
+plotlims <- c(12,40,0,0.8)  
+ticklocsx <- contrastsdB    # locations of tick marks on x axis
+ticklocsy <- seq(0,0.8,0.2)    # locations of tick marks on y axis
+ticklabelsx <-c(6,12,24,48,96)        # set labels for x ticks
+ticklabelsy <- ticklocsy    # set labels for y ticks
+
+postscript("CRF1e.ps", horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 5.5)
+
+par(pty="s")  # make axis square
+plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])   # create an empty axis of the correct dimensions
+axis(1, at=ticklocsx, tck=0.01, lab=F, lwd=2)     # plot tick marks (no labels)
+axis(2, at=ticklocsy, tck=0.01, lab=F, lwd=2)
+mtext(text = ticklabelsx, side = 1, at=ticklocsx)     # add the tick labels
+mtext(text = ticklabelsy, side = 2, at=ticklocsy, line=0.2, las=1) 
+title(xlab="Target contrast (%)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)  
+title(ylab="Amplitude (µV) at 2Hz", col.lab=rgb(0,0,0), line=1.5, cex.lab=1.5)
+
+for (cond in 1:3){
+  lines(contrastsdB,abs(cleanmeansEav[cond,]), col=colpal[cond], lwd=3, cex=0.5)
+  arrows(contrastsdB,abs(cleanmeansEav[cond,]),contrastsdB,cleanmeansEavCI[1,cond,],lwd=3,col=colpal[cond],length=0.05,angle=90)
+  arrows(contrastsdB,abs(cleanmeansEav[cond,]),contrastsdB,cleanmeansEavCI[2,cond,],lwd=3,col=colpal[cond],length=0.05,angle=90)
+  points(contrastsdB,abs(cleanmeansEav[cond,]), pch = 20+cond, col='black', bg=colpal[cond], cex=1.6, lwd=3)   # draw the data points themselves
+}  
+legend(19,0.8,c('Monocular','Binocular','Dichoptic'),pch=21:23,pt.bg=colpal[1:3],pt.lwd=3,pt.cex=1.6,box.lwd=2)
+text(14,0.75,'(c)',adj=0.5,cex=2.5)
+
+dev.off()
+
+postscript("CRF2e.ps", horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 5.5)
+
+par(pty="s")  # make axis square
+plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])   # create an empty axis of the correct dimensions
+axis(1, at=ticklocsx, tck=0.01, lab=F, lwd=2)     # plot tick marks (no labels)
+axis(2, at=ticklocsy, tck=0.01, lab=F, lwd=2)
+mtext(text = ticklabelsx, side = 1, at=ticklocsx)     # add the tick labels
+mtext(text = ticklabelsy, side = 2, at=ticklocsy, line=0.2, las=1)
+title(xlab="Target contrast (%)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)   
+title(ylab="Amplitude (µV) at 2Hz", col.lab=rgb(0,0,0), line=1.5, cex.lab=1.5)
+
+condlist <- c(1,5,6)
+pointlist <- c(21,24,25)
+for (cond in 1:3){
+  lines(contrastsdB,abs(cleanmeansEav[condlist[cond],]), col=colpal[condlist[cond]], lwd=3, cex=0.5)  
+  arrows(contrastsdB,abs(cleanmeansEav[condlist[cond],]),contrastsdB,cleanmeansEavCI[1,condlist[cond],],lwd=3,col=colpal[condlist[cond]],length=0.05,angle=90)
+  arrows(contrastsdB,abs(cleanmeansEav[condlist[cond],]),contrastsdB,cleanmeansEavCI[2,condlist[cond],],lwd=3,col=colpal[condlist[cond]],length=0.05,angle=90)
+  points(contrastsdB,abs(cleanmeansEav[condlist[cond],]), pch = pointlist[cond], col='black', bg=colpal[condlist[cond]], cex=1.6, lwd=3)   
+}  
+legend(19,0.8,c('Monocular','Binocular cross','Dichoptic cross'),pch=pointlist,pt.bg=colpal[condlist],pt.lwd=3,pt.cex=1.6,box.lwd=2)
+text(14,0.75,'(d)',adj=0.5,cex=2.5)
+
+dev.off()
+
+
+postscript("CRF3e.ps", horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 5.5)
+
+par(pty="s")  # make axis square
+plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])   # create an empty axis of the correct dimensions
+axis(1, at=ticklocsx, tck=0.01, lab=F, lwd=2)     # plot tick marks (no labels)
+axis(2, at=ticklocsy, tck=0.01, lab=F, lwd=2)
+mtext(text = ticklabelsx, side = 1, at=ticklocsx)     # add the tick labels
+mtext(text = ticklabelsy, side = 2, at=ticklocsy, line=0.2, las=1)
+title(xlab="Target contrast (%)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)    # titles for axes
+title(ylab="Amplitude (µV) at 1.6Hz", col.lab=rgb(0,0,0), line=1.5, cex.lab=1.5)
+
+for (cond in 4:6){
+  lines(contrastsdB,abs(cleanmasksEav[cond,]), col=colpal[cond], lwd=3, cex=0.5)   
+  arrows(contrastsdB,abs(cleanmasksEav[cond,]),contrastsdB,cleanmasksEavCI[1,cond,],lwd=3,col=colpal[cond],length=0.05,angle=90)
+  arrows(contrastsdB,abs(cleanmasksEav[cond,]),contrastsdB,cleanmasksEavCI[2,cond,],lwd=3,col=colpal[cond],length=0.05,angle=90)
+  points(contrastsdB,abs(cleanmasksEav[cond,]), pch = pointlist[cond-3], col='black', bg=colpal[cond], cex=1.6, lwd=3) 
+}
+legend(19,0.8,c('Monocular 1.6Hz','Binocular cross','Dichoptic cross'),pch=pointlist,pt.bg=colpal[4:6],pt.lwd=3,pt.cex=1.6,box.lwd=2)
+text(14,0.75,'(e)',adj=0.5,cex=2.5)
+
+dev.off()
+
+
+postscript("CRF1e2.ps", horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 5.5)
+
+par(pty="s")  # make axis square
+plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])   # create an empty axis of the correct dimensions
+axis(1, at=ticklocsx, tck=0.01, lab=F, lwd=2)     # plot tick marks (no labels)
+axis(2, at=ticklocsy, tck=0.01, lab=F, lwd=2)
+mtext(text = ticklabelsx, side = 1, at=ticklocsx)     # add the tick labels
+mtext(text = ticklabelsy, side = 2, at=ticklocsy, line=0.2, las=1) 
+title(xlab="Target contrast (%)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)  
+title(ylab="Amplitude (µV) at 4Hz", col.lab=rgb(0,0,0), line=1.5, cex.lab=1.5)
+
+for (cond in 1:3){
+  lines(contrastsdB,abs(cleanmeansE2av[cond,]), col=colpal[cond], lwd=3, cex=0.5)
+  arrows(contrastsdB,abs(cleanmeansE2av[cond,]),contrastsdB,cleanmeansE2avCI[1,cond,],lwd=3,col=colpal[cond],length=0.05,angle=90)
+  if (cond!=2){
+  arrows(contrastsdB,abs(cleanmeansE2av[cond,]),contrastsdB,cleanmeansE2avCI[2,cond,],lwd=3,col=colpal[cond],length=0.05,angle=90)}
+  
+  # plot an arrow for the final binocular target contrast level that is above 0.8
+  if (cond==2){
+  arrows(contrastsdB[1:4],abs(cleanmeansE2av[cond,1:4]),contrastsdB[1:4],cleanmeansE2avCI[2,cond,1:4],lwd=3,col=colpal[cond],length=0.05,angle=90)   
+  arrows(contrastsdB[5],abs(cleanmeansE2av[cond,5]),contrastsdB[5],0.8,lwd=3,col=colpal[cond],length=0.05,angle=45)    
+  }
+  
+  points(contrastsdB,abs(cleanmeansE2av[cond,]), pch = 20+cond, col='black', bg=colpal[cond], cex=1.6, lwd=3)   # draw the data points themselves
+}  
+legend(19,0.8,c('Monocular','Binocular','Dichoptic'),pch=21:23,pt.bg=colpal[1:3],pt.lwd=3,pt.cex=1.6,box.lwd=2)
+text(14,0.75,'(f)',adj=0.5,cex=2.5)
+
+dev.off()
+
+postscript("CRF2e2.ps", horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 5.5)
+
+par(pty="s")  # make axis square
+plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])   # create an empty axis of the correct dimensions
+axis(1, at=ticklocsx, tck=0.01, lab=F, lwd=2)     # plot tick marks (no labels)
+axis(2, at=ticklocsy, tck=0.01, lab=F, lwd=2)
+mtext(text = ticklabelsx, side = 1, at=ticklocsx)     # add the tick labels
+mtext(text = ticklabelsy, side = 2, at=ticklocsy, line=0.2, las=1)
+title(xlab="Target contrast (%)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)   
+title(ylab="Amplitude (µV) at 4Hz", col.lab=rgb(0,0,0), line=1.5, cex.lab=1.5)
+
+condlist <- c(1,5,6)
+pointlist <- c(21,24,25)
+for (cond in 1:3){
+  lines(contrastsdB,abs(cleanmeansE2av[condlist[cond],]), col=colpal[condlist[cond]], lwd=3, cex=0.5)  
+  arrows(contrastsdB,abs(cleanmeansE2av[condlist[cond],]),contrastsdB,cleanmeansE2avCI[1,condlist[cond],],lwd=3,col=colpal[condlist[cond]],length=0.05,angle=90)
+  arrows(contrastsdB,abs(cleanmeansE2av[condlist[cond],]),contrastsdB,cleanmeansE2avCI[2,condlist[cond],],lwd=3,col=colpal[condlist[cond]],length=0.05,angle=90)
+  points(contrastsdB,abs(cleanmeansE2av[condlist[cond],]), pch = pointlist[cond], col='black', bg=colpal[condlist[cond]], cex=1.6, lwd=3)   
+}  
+legend(19,0.8,c('Monocular','Binocular cross','Dichoptic cross'),pch=pointlist,pt.bg=colpal[condlist],pt.lwd=3,pt.cex=1.6,box.lwd=2)
+text(14,0.75,'(g)',adj=0.5,cex=2.5)
+
+dev.off()
+
+
+postscript("CRF3e2.ps", horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 5.5)
+
+par(pty="s")  # make axis square
+plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])   # create an empty axis of the correct dimensions
+axis(1, at=ticklocsx, tck=0.01, lab=F, lwd=2)     # plot tick marks (no labels)
+axis(2, at=ticklocsy, tck=0.01, lab=F, lwd=2)
+mtext(text = ticklabelsx, side = 1, at=ticklocsx)     # add the tick labels
+mtext(text = ticklabelsy, side = 2, at=ticklocsy, line=0.2, las=1)
+title(xlab="Target contrast (%)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)    # titles for axes
+title(ylab="Amplitude (µV) at 3.2Hz", col.lab=rgb(0,0,0), line=1.5, cex.lab=1.5)
+
+for (cond in 4:6){
+  lines(contrastsdB,abs(cleanmasksE2av[cond,]), col=colpal[cond], lwd=3, cex=0.5)   
+  arrows(contrastsdB,abs(cleanmasksE2av[cond,]),contrastsdB,cleanmasksE2avCI[1,cond,],lwd=3,col=colpal[cond],length=0.05,angle=90)
+  arrows(contrastsdB,abs(cleanmasksE2av[cond,]),contrastsdB,cleanmasksE2avCI[2,cond,],lwd=3,col=colpal[cond],length=0.05,angle=90)
+  points(contrastsdB,abs(cleanmasksE2av[cond,]), pch = pointlist[cond-3], col='black', bg=colpal[cond], cex=1.6, lwd=3) 
+}
+legend(19,0.8,c('Monocular 1.6Hz','Binocular cross','Dichoptic cross'),pch=pointlist,pt.bg=colpal[4:6],pt.lwd=3,pt.cex=1.6,box.lwd=2)
+text(14,0.75,'(h)',adj=0.5,cex=2.5)
+
+dev.off()
+
+
+postscript("SpecE.ps", horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 8)
+
+frequencies <- (0:299)/10
+
+plotlims <- c(1,6,0,1) 
+ticklocsx <- seq(1,6,1)    # locations of tick marks on x axis
+ticklocsy <- seq(0,1,0.2)    # locations of tick marks on y axis
+ticklabelsx <-ticklocsx        # set labels for x ticks
+ticklabelsy <- ticklocsy    # set labels for y ticks
+
+plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])   # create an empty axis of the correct dimensions
+axis(1, at=ticklocsx, tck=0.01, lab=F, lwd=2)     # plot tick marks (no labels)
+axis(2, at=ticklocsy, tck=0.01, lab=F, lwd=2)
+mtext(text = ticklabelsx, side = 1, at=ticklocsx)     # add the tick labels
+mtext(text = ticklabelsy, side = 2, at=ticklocsy, line=0.2, las=1)  
+title(xlab="Frequency (Hz)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)  
+title(ylab="Amplitude (µV)", col.lab=rgb(0,0,0), line=1.8, cex.lab=1.5)
+
+polygon(frequencies[c(11:61,61:11)],c(meanspectraECI[1,11:61],meanspectraECI[2,61:11]),col=colpal[2],border=NA)
+
+lines(frequencies[11:61],abs(meanspectraE[11:61]), col=colpal[2], lwd=3, cex=0.5) 
+
+text(1.1,0.95,'(b)',adj=0.5,cex=2.5)
+
+dev.off()
+
+
+
+postscript("timecourseE.ps", horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 8)
+
+times <- seq((1/1000)-1,13,1/1000)
+sinewave <- sin(2*times * 2*pi)
+sinewave[1:1000] <- 0
+sinewave[13001:14000] <- 0
+
+plotlims <- c(-1,13,-1,1) 
+ticklocsx <- seq(-1,13,1)    # locations of tick marks on x axis
+ticklocsy <- seq(-1,1,1)    # locations of tick marks on y axis
+ticklabelsx <- ticklocsx        # set labels for x ticks
+ticklabelsy <- ticklocsy    # set labels for y ticks
+
+plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])
+axis(1, at=ticklocsx, tck=0.01, lab=F, lwd=2)     # plot tick marks (no labels)
+axis(2, at=ticklocsy, tck=0.01, lab=F, lwd=2)
+mtext(text = ticklabelsx, side = 1, at=ticklocsx)     # add the tick labels
+mtext(text = ticklabelsy, side = 2, at=ticklocsy, line=0.2, las=1)  
+title(xlab="Time (s)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)  
+title(ylab="Amplitude (µV)", col.lab=rgb(0,0,0), line=1.8, cex.lab=1.5)
+
+# polygon(frequencies[c(11:51,51:11)],c(meanspectraPCI[1,11:51],meanspectraPCI[2,51:11]),col=colpal[2],border=NA)
+
+lines(times, sinewave, col='black', lwd=3) 
+
+text(-0.7,0.88,'(a)',adj=0.5,cex=2.5)
+
+dev.off()
+
+
+xpos <- 1:64
+ypos <- 1:64
+montageE <- toupper(as.character(hdata$Electrode))
+for (ch in 1:64){
+  i <- match(toupper(electrodes[ch+2]),montageE)
+  xpos[ch] <- hdata$X_position[i]
+  ypos[ch] <- hdata$Y_position[i]
+}
+
+ramp2 <- colorRamp(c("white",colpal[2]))  # create a ramp from one colour to another
+colmatrix2 <- rgb(ramp2(seq(0, 1, length = 101)), max = 255)
+
+## Create data frame to be used for interpolation - the function needs columns labelled x, y, and z
+rmax <- 0.55   #specify a maximum boundary for the grid
+gridRes <- 100 #specify the interpolation grid resolution
+
+toplot <- abs(cleanmeansE[,2,5])
+toplot[which(is.na(toplot))] <- 0
+testDat<- data.frame(x = xpos, y = -ypos, z = toplot)
+
+#Create the interpolation grid
+xo <- seq(min(-rmax, testDat$x), max(rmax, testDat$x), length = gridRes)
+yo <- seq(max(rmax, testDat$y), min(-rmax, testDat$y), length = gridRes)
+
+interpV4 <- v4Interp(testDat, xo, yo, rmax, gridRes)
+
+zo2 <- as.matrix(interpV4[,2:ncol(interpV4)])
+
+xo2 <- matrix(rep(xo,length(yo)),nrow = length(xo),ncol = length(yo))
+yo2 <- t(matrix(rep(yo,length(xo)),nrow = length(yo),ncol = length(xo)))
+outsidecircle <- sqrt(xo2^2 + yo2^2) > 0.51
+zo2[outsidecircle] <- 0
+
+tiff("head1.tiff", height = 600, width = 600, units="px", bg="white")
+
+plotlims <- c(-rmax,rmax,-rmax,rmax) 
+par(pty="s")  # make axis square
+plot(x=NULL,y=NULL,ann=FALSE, axes=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])  
+image(xo,xo,zo2,col=colmatrix2,zlim=c(0,1),add=TRUE,useRaster=TRUE)
+maskx <- c(hdata$OutlineX[1:51]*2.2,hdata$OutlineX[51:1])
+masky <- c(hdata$OutlineY[1:51]*2.2,hdata$OutlineY[51:1])
+polygon(maskx,masky,border=NA,col="white")
+maskx <- c(hdata$OutlineX[51:101]*2.2,hdata$OutlineX[101:51])
+masky <- c(hdata$OutlineY[51:101]*2.2,hdata$OutlineY[101:51])
+polygon(maskx,masky,border=NA,col="white")
+
+blackelectrodes <- match(toupper(targetelectrodes),toupper(as.character(electrodes[3:66])))
+points(xpos[blackelectrodes],ypos[blackelectrodes],pch=16,col="black",cex=2)
+
+lines(hdata$OutlineX,hdata$OutlineY,col="black",lwd=2)
+lines(hdata$NoseX,hdata$NoseY,col="black",lwd=2)
+lines(hdata$LearX,hdata$LearY,col="black",lwd=2)
+lines(hdata$RearX,hdata$RearY,col="black",lwd=2)
+
+dev.off()
+
+
+toplot <- abs(cleanmeansE2[,2,5])
+toplot[which(is.na(toplot))] <- 0
+testDat<- data.frame(x = xpos, y = -ypos, z = toplot)
+
+#Create the interpolation grid
+xo <- seq(min(-rmax, testDat$x), max(rmax, testDat$x), length = gridRes)
+yo <- seq(max(rmax, testDat$y), min(-rmax, testDat$y), length = gridRes)
+
+interpV4 <- v4Interp(testDat, xo, yo, rmax, gridRes)
+
+zo2 <- as.matrix(interpV4[,2:ncol(interpV4)])
+
+xo2 <- matrix(rep(xo,length(yo)),nrow = length(xo),ncol = length(yo))
+yo2 <- t(matrix(rep(yo,length(xo)),nrow = length(yo),ncol = length(xo)))
+outsidecircle <- sqrt(xo2^2 + yo2^2) > 0.51
+zo2[outsidecircle] <- 0
+zo2[which(zo2>1)] <- 1
+
+tiff("head2.tiff", height = 600, width = 600, units="px", bg="white")
+
+plotlims <- c(-rmax,rmax,-rmax,rmax) 
+par(pty="s")  # make axis square
+plot(x=NULL,y=NULL,ann=FALSE, axes=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])  
+image(xo,xo,zo2,col=colmatrix2,zlim=c(0,1),add=TRUE,useRaster=TRUE)
+maskx <- c(hdata$OutlineX[1:51]*2.2,hdata$OutlineX[51:1])
+masky <- c(hdata$OutlineY[1:51]*2.2,hdata$OutlineY[51:1])
+polygon(maskx,masky,border=NA,col="white")
+maskx <- c(hdata$OutlineX[51:101]*2.2,hdata$OutlineX[101:51])
+masky <- c(hdata$OutlineY[51:101]*2.2,hdata$OutlineY[101:51])
+polygon(maskx,masky,border=NA,col="white")
+
+blackelectrodes <- match(toupper(targetelectrodes),toupper(as.character(electrodes[3:66])))
+points(xpos[blackelectrodes],ypos[blackelectrodes],pch=16,col="black",cex=2)
+
+lines(hdata$OutlineX,hdata$OutlineY,col="black",lwd=2)
+lines(hdata$NoseX,hdata$NoseY,col="black",lwd=2)
+lines(hdata$LearX,hdata$LearY,col="black",lwd=2)
+lines(hdata$RearX,hdata$RearY,col="black",lwd=2)
+
+dev.off()
+
+
+  PostScriptTrace('CRF1e.ps')
+  p1 <- readPicture('CRF1e.ps.xml')
+  PostScriptTrace('CRF2e.ps')
+  p2 <- readPicture('CRF2e.ps.xml')
+  PostScriptTrace('CRF3e.ps')
+  p3 <- readPicture('CRF3e.ps.xml')
+  PostScriptTrace('SpecE.ps')
+  p4 <- readPicture('SpecE.ps.xml')
+  PostScriptTrace('timecourseE.ps')
+  p5 <- readPicture('timecourseE.ps.xml')
+  PostScriptTrace('CRF1e2.ps')
+  p6 <- readPicture('CRF1e2.ps.xml')
+  PostScriptTrace('CRF2e2.ps')
+  p7 <- readPicture('CRF2e2.ps.xml')
+  PostScriptTrace('CRF3e2.ps')
+  p8 <- readPicture('CRF3e2.ps.xml')
+  
+    for (n in 1:length(p4@paths)){
+    temp <- class(p4@paths[n]$path)[1]
+    if (pmatch(temp,"PictureFill",nomatch=0)){
+      if (sum(col2rgb(p4@paths[n]$path@rgb))<765){p4@paths[n]$path@rgb <- addalpha(p4@paths[n]$path@rgb,alpha=0.2)}}}
+  
+  h1 <- readTIFF('head1.tiff')
+  h2 <- readTIFF('head2.tiff')
+  
+  pdf(paste0(figdir,"EEGdata.pdf"), bg="transparent", height = 15, width = 15)
+  par(mar=c(0.1,0.1,0.1,0.1))
+  plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=c(0,1), ylim=c(0,1))
+  
+  # insert the head plots first so the white border doesn't overlap the other graphs
+    aspratio <- 1  # this is the aspect ratio of the output pdf
+  imwidth <- 0.16
+  xstart <- 0.65
+  ystart <- 0.82
+  rasterImage(h1,xstart,ystart,xstart+imwidth*aspratio,ystart+imwidth) 
+  xstart <- 0.82
+  ystart <- 0.82
+  rasterImage(h2,xstart,ystart,xstart+imwidth*aspratio,ystart+imwidth)
+
+  grid.picture(p5,x=0.25,y=0.8,width=0.5,height=1)
+  grid.picture(p4,x=0.75,y=0.8,width=0.5,height=1)
+  grid.picture(p1,x=0.17,y=0.5,width=0.32,height=1)
+  grid.picture(p2,x=0.5,y=0.5,width=0.32,height=1)
+  grid.picture(p3,x=0.83,y=0.5,width=0.32,height=1)
+  grid.picture(p6,x=0.17,y=0.175,width=0.32,height=1)
+  grid.picture(p7,x=0.5,y=0.175,width=0.32,height=1)
+  grid.picture(p8,x=0.83,y=0.175,width=0.32,height=1)
+  
+    text(0.5,1,'Electroencephalography',cex=4)
+
+  dev.off()
+  
+  file.remove(c('CRF1e.ps','CRF2e.ps','CRF3e.ps','CRF1e2.ps','CRF2e2.ps','CRF3e2.ps','SpecE.ps','timecourseE.ps','head1.tiff','head2.tiff'))
+  file.remove(c('CRF1e.ps.xml','CRF2e.ps.xml','CRF3e.ps.xml','CRF1e2.ps.xml','CRF2e2.ps.xml','CRF3e2.ps.xml','SpecE.ps.xml','timecourseE.ps.xml'))
+
+
+
+}
+
+```
+
+```{r EEGdata, fig.cap="Summary of EEG results for N=30 participants. Panel (a) shows a group average waveform for binocular presentation, with the driving signal plotted at the foot. Panel (b) shows the average Fourier spectrum, and inset scalp distributions. Black dots on the scalp plots indicate electrodes Oz, POz, O1 and O2. Panels (c,d) show contrast response functions at 2Hz for different conditions. Panel (e) shows contrast response functions at 1.6Hz for three conditions. Panels (f-h) are in the same format but for the second harmonic responses. Shaded regions and error bars indicate bootstrapped 95 percent confidence intervals.", fig.align="center", echo=FALSE}
+
+knitr::include_graphics('local/Figures/EEGdata.pdf')
+
+```
+
+
+
+## Experiment 2
 
 Figure showing summary of data from the experiment with different temporal frequencies
 
 
-### Experiment 3
+## Experiment 3
 
 Figure summarising the matching results (probably averaged across participants)
 
-### Computational modelling
+## Computational modelling
 
-Probably makes sense to explain the modelling after presenting the data. We might plot the model curves in the figures above, but then here have a summary figure with the posterior distributions of the interocular suppression parameter across four data sets.
+Figure showing model behaviour (four panels) and posterior weight distributions.
 
 
-## Discussion
+# Discussion
 
-## References
+# References
