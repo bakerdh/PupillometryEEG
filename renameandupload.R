@@ -1,4 +1,3 @@
-
 # packagelist <- c('remotes','tictoc','utils')
 # missingpackages <- packagelist[!packagelist %in% installed.packages()[,1]]
 # if (length(missingpackages)>0){install.packages(missingpackages)}
@@ -7,20 +6,77 @@
 # toinstall <- packagelist[which(!packagelist %in% (.packages()))]
 # invisible(lapply(toinstall,library,character.only=TRUE))
 
-
-
-d <- dir('~/Desktop/P101/')
-p <- getwd()
-setwd('~/Desktop/P101/')
-tar(tarfile='P101.tar',files=d,compression='gzip')
-setwd(p)
+library(osfr)
 
 osf_auth(token = '3dEYuhZNmwWbG3xuhRIiVRo0T2oniOkEP3Ip8i1LPG4PNjeTRln54eGNAG7oyTT9xozWwJ')
 osfproject <- osf_retrieve_node("x8u4v")
 componentlist <- osf_ls_nodes(osfproject)
-datafilesonOSF <- osf_ls_files(osfproject,n_max=300)
 
-if (!pmatch('P101.tar',datafilesonOSF$name,nomatch=0)){
-  osf_upload(osfproject,'~/Desktop/P101/P101.tar',progress=TRUE)
+p <- getwd()
+
+for (s in 16:30){
+  
+  subj <- paste0('P',s+100)
+  
+  subjdir <- paste0('/Users/danbaker/Desktop/Pupildata/',subj)
+  if (!file.exists(subjdir)){dir.create(subjdir)}
+  
+  eegfiles <- dir('/Volumes/DANLAB/Eyetracking/Federico/Exp1/EEG/Zipped',pattern=paste0(subj,'_*'),full.names=TRUE)
+  file.copy(eegfiles,subjdir)
+  
+  setwd(subjdir)
+  
+  d <- dir(subjdir)
+  for (n in 1:length(d)){file.rename(d[n],paste0(unlist(strsplit(d[n],'[.]'))[1],'.csv.gz'))}
+  
+  PPfiles <- dir('/Volumes/DANLAB/Eyetracking/Federico/Exp1/Psychopy/CSV/',pattern=paste0(subj,'_*'),full.names=TRUE)
+  file.copy(PPfiles,subjdir)
+  pupilfiles <- dir('/Volumes/DANLAB/Eyetracking/Federico/Exp1/Eyetracking/CSV/',pattern=paste0(subj,'_*'),full.names=TRUE)
+  file.copy(pupilfiles,subjdir)
+  
+  d <- dir(subjdir)
+  
+  tar(tarfile=paste0(subj,'.tar'),files=d,compression='gzip')
+  setwd(p)
+  
+  datafilesonOSF <- osf_ls_files(osfproject,n_max=300)
+  
+  if (!pmatch(paste0(subj,'.tar'),datafilesonOSF$name,nomatch=0)){
+    osf_upload(osfproject,paste0(subjdir,'/',subj,'.tar'),progress=TRUE)
+  }
+  
+  unlink(subjdir,recursive=TRUE)
+  
+}
+
+
+
+
+osfproject <- osf_retrieve_node("mvpyz")
+componentlist <- osf_ls_nodes(osfproject)
+
+p <- getwd()
+
+for (s in 2:12){
+  
+  subj <- paste0('P',s+150)
+  
+  subjdir <- paste0('local/TFdata/',subj)
+
+  setwd(subjdir)
+  
+  d <- dir()
+  
+  tar(tarfile=paste0(subj,'.tar'),files=d,compression='gzip')
+  setwd(p)
+  
+  datafilesonOSF <- osf_ls_files(osfproject,n_max=300)
+  
+  if (!pmatch(paste0(subj,'.tar'),datafilesonOSF$name,nomatch=0)){
+    osf_upload(osfproject,paste0(subjdir,'/',subj,'.tar'),progress=TRUE)
+  }
+  
+  # unlink(subjdir,recursive=TRUE)
+  
 }
 
