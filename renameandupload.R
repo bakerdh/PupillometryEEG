@@ -8,13 +8,13 @@
 
 library(osfr)
 
-osf_auth(token = '3dEYuhZNmwWbG3xuhRIiVRo0T2oniOkEP3Ip8i1LPG4PNjeTRln54eGNAG7oyTT9xozWwJ')
+osf_auth(token = 'PRIVATETOKENGOESHERE')
 osfproject <- osf_retrieve_node("x8u4v")
 componentlist <- osf_ls_nodes(osfproject)
 
 p <- getwd()
 
-for (s in 16:30){
+for (s in 1:30){
   
   subj <- paste0('P',s+100)
   
@@ -57,7 +57,7 @@ componentlist <- osf_ls_nodes(osfproject)
 
 p <- getwd()
 
-for (s in 2:12){
+for (s in 1:12){
   
   subj <- paste0('P',s+150)
   

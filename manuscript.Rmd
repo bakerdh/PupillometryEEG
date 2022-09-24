@@ -21,7 +21,7 @@ processdata <- 0  # this flag determines the amount of processing, with 4 levels
 # 0 - do no processing, generate the pdf using existing versions of all figures
 # 1 - generate figures using the processed group data
 # 2 - average data across participants, do bootstrapping and modelling
-# 3 - download all raw data and analyse (requires XGB of storage)
+# 3 - download all raw data and analyse (requires 48GB of storage)
 
 # check which packages are installed, install the missing ones, and activate
 packagelist <- c('knitr','remotes','tictoc','R.matlab','bookdown','grImport','tiff','pals','ez','gtools','signal','boot','quickpsy','rstan','coda','parallel') # list of CRAN packages
@@ -330,9 +330,20 @@ save(file=paste(datadir,'P',100+participant,'summary.RData',sep=''),list=c('clea
 
 if (processdata > 1){
 
+         if (!file.exists(paste0(datadir,'headerfile.csv'))){
+           # download it from OSF
+           if (!exists('osffiles')){
+           osfnode <- 'x8u4v'
+           osfproject <- osf_retrieve_node(osfnode)
+          osffiles <- osf_ls_files(osfproject,n_max=300)}
+          fid <- which(osffiles$name=='headerfile.csv')
+          osf_download(osffiles[fid,],datadir,progress=TRUE)
+          } 
+  
+  hdata <- read.csv(paste0(datadir,'headerfile.csv'))  
 
 for (participant in 1:30){
-         # if the tar file of this participant's data doesn't exist
+         # if the summary file of this participant's data doesn't exist
          if (!file.exists(paste0(datadir,'P',100+participant,'summary.RData'))){
            # download it from OSF
            if (!exists('osffilesP')){
@@ -344,18 +355,7 @@ for (participant in 1:30){
          }
 }
 
-          if (!file.exists(paste0(datadir,'headerfile.csv'))){
-           # download it from OSF
-           if (!exists('osffilesP')){
-           osfnode <- '2qu6y'
-           osfproject <- osf_retrieve_node(osfnode)
-          osffilesP <- osf_ls_files(osfproject,n_max=300)}
-          fid <- which(osffilesP$name==paste0('P',100+participant,'headerfile.csv'))
-          osf_download(osffilesP[fid,],datadir,progress=TRUE)
-          } 
-  
-  hdata <- read.csv(paste0(datadir,'headerfile.csv'))  
-
+ 
 d <- dir(datadir,pattern='*summary.RData',full.names=TRUE)
 
 tempmasksP <- array(0,dim=c(length(d),6,5))
@@ -735,9 +735,9 @@ title(xlab="Time (s)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)
 title(ylab="Amplitude (mm)", col.lab=rgb(0,0,0), line=1.8, cex.lab=1.5)
 
 filt <- butter(3,0.083)
-filtwaveP <- filter(filt, meanwavesP)
-filtU <- filter(filt,meanwavesPCI[1,])
-filtL <- filter(filt,meanwavesPCI[2,])
+filtwaveP <- signal::filter(filt, meanwavesP)
+filtU <- signal::filter(filt,meanwavesPCI[1,])
+filtL <- signal::filter(filt,meanwavesPCI[2,])
 polygon(times[c(1:length(times),length(times):1)],c(filtL,filtU[length(filtU):1]),col=colpal[2],border=NA)
 
 lines(times, filtwaveP, col=colpal[2], lwd=1.5) 
@@ -808,6 +808,15 @@ if (processdata > 0){
 
 contrastsdB <- 20*log10(c(6,12,24,48,96))
 
+         if (!file.exists(paste0(datadir,'headerfile.csv'))){
+           # download it from OSF
+           if (!exists('osffiles')){
+           osfnode <- 'x8u4v'
+           osfproject <- osf_retrieve_node(osfnode)
+          osffiles <- osf_ls_files(osfproject,n_max=300)}
+          fid <- which(osffiles$name=='headerfile.csv')
+          osf_download(osffiles[fid,],datadir,progress=TRUE)
+          } 
 hdata <- read.csv(paste0(datadir,'headerfile.csv'))  
 
          if (!file.exists(paste0(datadir,'Averagedata.RData'))){
@@ -1028,9 +1037,9 @@ title(xlab="Time (s)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)
 title(ylab="Amplitude (µV)", col.lab=rgb(0,0,0), line=1.8, cex.lab=1.5)
 
 filt <- butter(3,0.083*0.12)
-filtwaveE <- filter(filt, meanwavesE)
-filtU <- filter(filt,meanwavesECI[1,])
-filtL <- filter(filt,meanwavesECI[2,])
+filtwaveE <- signal::filter(filt, meanwavesE)
+filtU <- signal::filter(filt,meanwavesECI[1,])
+filtL <- signal::filter(filt,meanwavesECI[2,])
 polygon(times[c(1:length(times),length(times):1)],c(filtL,filtU[length(filtU):1]),col=colpal[2],border=NA)
 
 lines(times, filtwaveE, col=colpal[2], lwd=1.5) 
@@ -1256,7 +1265,7 @@ if (processdata > 2){
         }
         
         # then unzip the tar file
-        untar(paste0(rawdir,'P',150+participant,'.tar'),exdir=paste0(rawdir,'P',100+participant))
+        untar(paste0(rawdir,'P',150+participant,'.tar'),exdir=paste0(rawdir,'P',150+participant))
         
         # and delete the tar file to save storage space
         file.remove(paste0(rawdir,'P',150+participant,'.tar'))
@@ -1352,20 +1361,20 @@ if (processdata > 1){
   allmeans <- array(0,dim=c(12,2,5))
   allratios <- matrix(0,nrow=12,ncol=5)
   
-  for (participant in 1:12){
-    
-    for (participant in 1:30){
-         # if the tar file of this participant's data doesn't exist
+      for (participant in 1:12){
+         # if the summary file of this participant's data doesn't exist
          if (!file.exists(paste0(datadir,'P',150+participant,'summary.RData'))){
            # download it from OSF
            if (!exists('osffilesP')){
            osfnode <- '2qu6y'
            osfproject <- osf_retrieve_node(osfnode)
           osffilesP <- osf_ls_files(osfproject,n_max=300)}
-          fid <- which(osffilesP$name==paste0('P',100+participant,'summary.RData'))
+          fid <- which(osffilesP$name==paste0('P',150+participant,'summary.RData'))
           osf_download(osffilesP[fid,],datadir,progress=TRUE)
          }
-    }
+      }
+  
+  for (participant in 1:12){
     
     load(paste0(datadir,'P',150+participant,'summary.RData'))
     
