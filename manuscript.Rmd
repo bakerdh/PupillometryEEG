@@ -17,7 +17,7 @@ csl: elife.csl
 
 ```{r setup, include=FALSE}
 
-processdata <- 0  # this flag determines the amount of processing, with 4 levels:
+processdata <- 1  # this flag determines the amount of processing, with 4 levels:
 # 0 - do no processing, generate the pdf using existing versions of all figures
 # 1 - generate figures using the processed group data
 # 2 - average data across participants, do bootstrapping and modelling
@@ -1589,6 +1589,9 @@ knitr::include_graphics(paste0(figdir,'TFdata.pdf'))
 
 # (download and) analyse individual participant data for the matching experiment
 
+ratiosL <- c(1, 1, 1, 1, 1, 0.75, 0.5, 0.25, 0)
+ratiosR <- c(0, 0.25, 0.5, 0.75, 1, 1, 1, 1, 1)
+
 if (processdata > 2){
   
 if (!file.exists(paste0(datadir,'matchingdata.csv'))){
@@ -1602,8 +1605,6 @@ osf_download(matchingfiles[fid,],datadir,progress=TRUE)
 matchingdata <- read.csv(paste0(datadir,'matchingdata.csv'))  
 
 levels <- unique(matchingdata$allref)
-ratiosL <- c(1, 1, 1, 1, 1, 0.75, 0.5, 0.25, 0)
-ratiosR <- c(0, 0.25, 0.5, 0.75, 1, 1, 1, 1, 1)
 subjects <- unique(matchingdata$Participant)
 
 allthresh <- array(0,dim=c(length(subjects),length(levels),length(ratiosL)))
@@ -1650,6 +1651,17 @@ save(file=paste0(datadir,'meanmatching.RData'),list=c('meanthresh','SEthresh','a
 }
 
 if (processdata > 0){
+  
+  
+           if (!file.exists(paste0(datadir,'meanmatching.RData'))){
+           # download it from OSF
+           if (!exists('osffilesP')){
+           osfnode <- '2qu6y'
+           osfproject <- osf_retrieve_node(osfnode)
+          osffilesP <- osf_ls_files(osfproject,n_max=300)}
+          fid <- which(osffilesP$name=='meanmatching.RData')
+          osf_download(osffilesP[fid,],datadir,progress=TRUE)
+           }
   
 load(paste0(datadir,'meanmatching.RData'))
   
