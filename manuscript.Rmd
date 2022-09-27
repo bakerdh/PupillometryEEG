@@ -90,24 +90,39 @@ With this in mind we designed an experiment that simultaneously recorded electro
 To follow up on the results that we obtained, we decided to perform a contrast matching experiment to investigate whether perception of flickering light is consistent with the results observed in the cortical pathways (visual cortex) or the subcortical pathways (pupils). Matching is a paradigm in which the perceived brightness of a standard stimulus is matched to that of a target stimulus. In the latter, the interocular ratios of luminance are varied to obtain an equibrightness curve. Previous literature has used this paradigm to investigate the binocular fusion of static stimuli and the temporal combination of spatial flickering of spatial increments (a bright target on a dark background) and decrements (a dark target on a bright background) [@Anstis1998; @Levelt1965]. For spatial increments, it was found that binocular fusion seems to follow approximately linear combination rules. This means that, for a monocular stimulus to elicit the same response as a binocular stimulus, the former needs to have twice the signal of the latter. On the other hand, spatial decrements follow a winner-takes-all pattern. This means that the observer is seeing what the eye that is receiving the strongest signal is seeing.
 Our experiment used different stimuli than the ones used by Anstis and Ho: in the binocular fusion experiment, their stimuli were not flickering and, in the flicker experiment, they were always shown in both eyes. In our experiment, in some conditions, the flicker was shown to only one eye. Moreover, they were looking at the temporal fusion of the flicker while we focussed on the binocular fusion of the flicker. Based on this and on the results from our first experiment, we expected to find a near linear summation of the responses.
 
+
 # Methods
-
-
 ## Participants
+Thirty, twelve and ten participants were recruited for experiment 1, 2 and 3 respectively. All participants had normal or corrected to normal binocular vision. All participants gave written informed consent.
 
 ## Apparatus & Stimuli
-
-
+The stimuli were two discs of flickering light with a diameter of 3.74 degrees, presented on a black background. The same stimuli were used for all three experiments. Four dark red lines were added around both discs to help with their fusion into one binocular disc. Figure 1 shows an example of the of the unfused stimuli. The discs were viewed through a four-mirror stereoscope, which used front silvered mirrors and so did not suffer from internal reflections, and allowed participants to see only one fused disc. The use of a stereoscope allowed us to display the stimuli in three different ocular configurations: monocular, binocular, and dichoptic. 
+All stimuli were displayed at a mean luminance of 42 cd/m$^2$ on an Iiyama Vision Master™ Pro 510 display (800 x 600 pixels, 60 Hz refresh rate), which was gamma corrected using a Minolta LS-110 (Minolta Camera Co. Ltd., Japan). For experiments 1 and 2, the stimuli were presented using Psychopy (v3.0.7). For experiment 3, the stimuli were presented using Psychopy (v2022.1.1).
+EEG data were collected for experiments 1 and 2 sampled at 1 kHz using a 64-electrode ANT WaveGuard cap and the signals were recorded using the ASA software (ANT Neuro, Hengelo, NL, United States). Pupillometry data were collected only for experiment 1 using a binocular Pupil Core eye-tracker (Pupil Labs GmbH) running at 120 Hz and the signals were recorded with the Pupil Capture software (Pupil Labs GmbH).
 
 ## Procedure
+Before each experiment, participants calibrated the stereoscope by adjusting the angle of the mirrors. This was done so that they would perceive the two discs as one fused disc when looking at the screen through the stereoscope.
+
+### Experiment 1
+The experiment was conducted in a windowless room, in which the only light source was the monitor. The participants sat at 99 cm from the monitor and their viewing distance through the stereoscope was 107 cm. The experiment was carried out in one session lasting 45 minutes in total, divided in three blocks of 15 minutes each. In each block, there were 60 trials in total lasting 15 seconds each (12s of stimulus presentation, with an interstimulus interval of 3s). The participants had no task and were asked to look at the fixation crosses in the middle of the two discs while trying to minimise their blinking during the presentation period. The discs flickered in counterphase at 2 Hz, but in some conditions (cross-frequency conditions) one of the two discs flickered at 1.6 Hz. They were set at five temporal contrast levels relative to the mean luminance: 6, 12, 24, 48 and 96 \%.
+As already stated, the mirror stereoscope allowed the use of three different ocular configurations. In the monocular configuration, one disc was set to flicker either at 2 Hz or 1.6 Hz for each contrast level, while the other disc remained stable at a constant mean luminance. In the binocular configuration, both discs flickered at the same contrast level with both discs flickering at 2 Hz in the same-frequency condition, while, in the cross-frequency condition, one disc flickered at 2 Hz and the other at 1.6 Hz. Finally, in the dichoptic configuration, one disc flickered across all contrast levels and the other flickered at a fixed contrast level that was set at 48 %. Similar to the binocular configuration, the dichoptic configuration was divided in same-frequency and cross-frequency conditions.
+
+### Experiment 2
+The conditions were similar to experiment 1 (windowless room and viewing distance of 107 cm). Like in experiment 1, participants had no specific task other than looking at the fixation crosses and minimising their blinking. Unlike the first experiment, only one contrast level was used (96 \%) and the discs were set to flicker at five different frequencies (2, 4, 8, 16 and 30 Hz). Only two ocular configurations, monocular and binocular, were used, with the latter having both discs flickering at the same frequency.
+The experiment was carried out in one session lasting 25 minutes in total, divided in five blocks of 5 minutes each. In each block, there were 20 trials in total lasting 15 seconds each (12s of stimulus presentation and 3s of interstimulus interval).
+
+### Experiment 3
+The experiment was conducted in a room with a blacked-out window. The sitting and viewing distances of the participants were similar to the two previous experiments. As this was a psychophysical task, no EEG or pupillometry data were collected for this experiment. 
+A two-interval forced-choice staircase procedure was used to collect data. In one interval, participants were presented with a standard fused disc that flickered at a set contrast level (either 24 or 48 \%), which was selected by the experimenter at the beginning of each block. In a separate interval, a target fused disc flickering at varying contrast levels was displayed. The contrast level of the target was controlled by a 1-up, 1-down staircase moving in logarithmic (dB) steps of contrast. The ratio of flicker amplitudes in the left and right eyes was varied across blocks and was set to be 0, 0.25, 0.5, 0.75 or 1. The standard and the target fused discs were displayed for 1 second each, with an interstimulus interval of 0.5 seconds. After the discs appeared on screen, the participants had to indicate which interval they perceived as having the more intense flicker. The intervals were randomly ordered, and all discs flickered at a frequency of 2 Hz.
+Due to its long duration (162 minutes in total), the participants completed the experiment across multiple sessions divided at their own discretion. The experiment was divided in 54 blocks (3 repetitions $\times$ 2 standard contrasts $\times$ 9 target ratios), which lasted on average 3 minutes each (depending on the response speed of the participant). In each block, there were a total of 50 trials. We pooled the data from all repetitions of a given condition and fitted a cumulative normal psychometric function to estimate the point of subjective equality at the 50 \% point.
 
 ## Data analysis
+EEG data were converted from the ANT-EEProbe format to a compressed csv text file using a custom Matlab script and components of the EEGlab toolbox [@Delorme2004]. The data for each participant were then loaded into R for analysis where a ten-second waveform for each trial at each electrode was extracted. Fourier transform was calculated for each waveform, and the spectrum stored in a matrix. All repetitions of each condition were then averaged for each electrode. They were then averaged across the four occipital electrodes (POz, Oz, O1, O2), to obtain individual results. Finally, these were averaged across all participants to obtain the final results.
 
 
 # Results
-
 ## Experiment 1
-
+The results from the first experiment are shown in figures 2 and 3. Each curve is showing the amplitude of the signal for the three different configurations (monocular, binocular and dichoptic).
 ```{r include=FALSE, results='hide'}
 
 # (download and) analyse individual participant data for experiment 1
@@ -804,7 +819,7 @@ knitr::include_graphics(paste0(figdir,'pupildata.pdf'))
 ```
 
 
-Figure \@ref(fig:pupildata)a
+Figure @ref(fig:pupildata)a
 
 ```{r include=FALSE, results='hide'}
 
@@ -1232,7 +1247,7 @@ knitr::include_graphics(paste0(figdir,'EEGdata.pdf'))
 
 
 ## Experiment 2
-
+The results from the second experiment are shown in figure 4. In figures 5A to 5C, the curves are showing the results for the monocular and the binocular configurations. In figure 5D, the curves are showing the results for the two harmonics.
 ```{r include=FALSE, results='hide'}
 
 # (download and) analyse the raw data from the temporal frequency experiment
