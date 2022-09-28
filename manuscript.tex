@@ -4,10 +4,10 @@
 %
 \documentclass[
 ]{article}
+\usepackage{amsmath,amssymb}
 \usepackage{lmodern}
-\usepackage{amssymb,amsmath}
-\usepackage{ifxetex,ifluatex}
-\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+\usepackage{iftex}
+\ifPDFTeX
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
   \usepackage{textcomp} % provide euro and other symbols
@@ -42,7 +42,8 @@
   pdfcreator={LaTeX via pandoc}}
 \urlstyle{same} % disable monospaced font for URLs
 \usepackage[margin=1in]{geometry}
-\usepackage{longtable,booktabs}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
 % Correct order of tables after \paragraph or \subparagraph
 \usepackage{etoolbox}
 \makeatletter
@@ -51,7 +52,7 @@
 % Allow footnotes in longtable head/foot
 \IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
 \makesavenoteenv{longtable}
-\usepackage{graphicx,grffile}
+\usepackage{graphicx}
 \makeatletter
 \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
 \def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
@@ -68,10 +69,36 @@
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{5}
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newlength{\cslentryspacingunit} % times entry-spacing
+\setlength{\cslentryspacingunit}{\parskip}
+\newenvironment{CSLReferences}[2] % #1 hanging-ident, #2 entry spacing
+ {% don't indent paragraphs
+  \setlength{\parindent}{0pt}
+  % turn on hanging indent if param 1 is 1
+  \ifodd #1
+  \let\oldpar\par
+  \def\par{\hangindent=\cslhangindent\oldpar}
+  \fi
+  % set entry spacing
+  \setlength{\parskip}{#2\cslentryspacingunit}
+ }%
+ {}
+\usepackage{calc}
+\newcommand{\CSLBlock}[1]{#1\hfill\break}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{#1}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{#1}\break}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
 
 \title{Different rules for binocular combination of luminance in cortical and subcortical pathways}
 \author{Federico G. Segala, Aurelio Bruno, Alex R. Wade \& Daniel H. Baker (+Myat? +Joel?)}
-\date{2022-09-27}
+\date{2022-09-28}
 
 \begin{document}
 \maketitle
@@ -103,11 +130,11 @@ Thirty, twelve and ten participants were recruited for experiment 1, 2 and 3 res
 \hypertarget{apparatus-stimuli}{%
 \subsection{Apparatus \& Stimuli}\label{apparatus-stimuli}}
 
-The stimuli were two discs of flickering light with a diameter of 3.74 degrees, presented on a black background. The same stimuli were used for all three experiments. Four dark red lines were added around both discs to help with their fusion into one binocular disc. Figure 1 shows an example of the of the unfused stimuli. The discs were viewed through a four-mirror stereoscope, which used front silvered mirrors and so did not suffer from internal reflections, and allowed participants to see only one fused disc. The use of a stereoscope allowed us to display the stimuli in three different ocular configurations: monocular, binocular, and dichoptic.
+The stimuli were two discs of flickering light with a diameter of 3.74 degrees, presented on a black background. The same stimuli were used for all three experiments. Four dark red lines were added around both discs to help with their fusion into one binocular disc (see insert in figure \ref{fig:pupildata}a for an example of the of the fused stimuli). The discs were viewed through a four-mirror stereoscope, which used front silvered mirrors and so did not suffer from internal reflections, and allowed participants to see only one fused disc. The use of a stereoscope allowed us to display the stimuli in three different ocular configurations: monocular, binocular, and dichoptic.
 
 All stimuli were displayed at a mean luminance of 42 cd/m\(^2\) on an Iiyama Vision Master™ Pro 510 display (800 x 600 pixels, 60 Hz refresh rate), which was gamma corrected using a Minolta LS-110 (Minolta Camera Co.~Ltd., Japan). For experiments 1 and 2, the stimuli were presented using Psychopy (v3.0.7). For experiment 3, the stimuli were presented using Psychopy (v2022.1.1).
 
-EEG data were collected for experiments 1 and 2 sampled at 1 kHz using a 64-electrode ANT WaveGuard cap and the signals were recorded using the ASA software (ANT Neuro, Hengelo, NL, United States). Pupillometry data were collected only for experiment 1 using a binocular Pupil Core eye-tracker (Pupil Labs GmbH) running at 120 Hz and the signals were recorded with the Pupil Capture software (Pupil Labs GmbH).
+EEG data were collected for experiments 1 and 2 sampled at 1 kHz using a 64-electrode ANT WaveGuard cap and the signals were recorded using the ASA software (ANT Neuro, Hengelo, NL, United States). Pupillometry data were collected only for experiment 1 using a binocular Pupil Core eye-tracker (Pupil Labs GmbH, Kassner et al. (2014)) running at 120 Hz and the signals were recorded with the Pupil Capture software (Pupil Labs GmbH, Kassner et al. (2014)).
 
 \hypertarget{procedure}{%
 \subsection{Procedure}\label{procedure}}
@@ -142,6 +169,8 @@ Due to its long duration (162 minutes in total), the participants completed the 
 
 EEG data were converted from the ANT-EEProbe format to a compressed csv text file using a custom Matlab script and components of the EEGlab toolbox (Delorme and Makeig, 2004). The data for each participant were then loaded into R for analysis where a ten-second waveform for each trial at each electrode was extracted. Fourier transform was calculated for each waveform, and the spectrum stored in a matrix. All repetitions of each condition were then averaged for each electrode. They were then averaged across the four occipital electrodes (POz, Oz, O1, O2), to obtain individual results. Finally, these were averaged across all participants to obtain the final results.
 
+A similar process was adopted for the analysis of the pupillometry data. The data were converted from the mp4 format to a compressed csv text file using the Pupil Player software (Kassner et al., 2014). The individual data were then loaded into R for analysis where a twelve-second waveform for each trial in each eye was extracted. Fourier transform was calculated for each waveform, and the spectrum stored in a matrix. All repetitions of each condition were then averaged for each eye. They were then averaged across the two eyes, to obtain individual results. Finally, these were averaged across all participants to obtain the final results.
+
 \hypertarget{results}{%
 \section{Results}\label{results}}
 
@@ -171,7 +200,7 @@ The results from the first experiment are shown in figure \ref{fig:pupildata} an
 \hypertarget{experiment-2-1}{%
 \subsection{Experiment 2}\label{experiment-2-1}}
 
-The results from the second experiment are shown in figure \ref{fig:TFdata}. In figures 5A to 5C, the curves are showing the results for the monocular and the binocular configurations. In figure 5D, the curves are showing the results for the two harmonics.
+The results from the second experiment are shown in figure \ref{fig:TFdata}. Figure \ref{fig:TFdata}a is showing the fourier spectra
 
 \begin{figure}
 
@@ -185,6 +214,11 @@ The results from the second experiment are shown in figure \ref{fig:TFdata}. In 
 \hypertarget{experiment-3-1}{%
 \subsection{Experiment 3}\label{experiment-3-1}}
 
+The results from the third experiment are shown in figure \ref{fig:matchingdata}. Each curve is showing the contrast level in each eye for the different interocular ratios.
+
+Looking at the results for the 48 \% contrast condition, we can observe that, when the ratio in both eyes was set to be one, the target appeared to have the same flickering intensity as the standard when the contrast in both eyes was selected to be, on average, 50 \% (red line). This is also observable for the 24 \% contrast condition, where the target appeared to have the same flickering intensity when the contrast was selected to be around 25 \%. These two results show that the paradigm was working correctly and that the participants could see the flicker properly.
+When the ratio was set to be 0 in one of the two eyes, we observe that, for the target to appear to flicker similarly to the standard, the contrast in the other eye was set to be around double the contrast of the standard. For the 48 \% contrast, when the ratio in the right eye was 0, the contrast in the left eye was around 90 \%, while, when the ratio in the left eye was 0, contrast in the right eye was around 96 \%. For the 24 \% contrast, when the ratio in the right eye was 0, the contrast in the left eye was around 57 \%, while, when the ratio in the left eye was 0, contrast in the right eye was around 50 \%. When looking at the rest of the data, we can see that the points, for both contrast conditions, seem to fall along the line representing a linear combination model, with the results for the 24 \% condition showing a very strong summation that seem to exceed this linear combination. Overall, these results seem to suggest that the processing of temporal luminance modulations seems to follow near linear combination rules, which is in line with our results from experiment 1.
+
 \begin{figure}
 
 {\centering \includegraphics{Figures/matchingdata} 
@@ -193,11 +227,6 @@ The results from the second experiment are shown in figure \ref{fig:TFdata}. In 
 
 \caption{Contrast matching functions. Dotted and dashed lines are predictions of canonical summation models with a linear exponent (dotted) or an infinite exponent (dashed). Error bars indicate the standard error across participants (N=10), and are constrained along radial lines converging at the origin. Interocular ratio distribution (from left to right of the figure): 1L0R, 1L0.25R, 1L0.5R, 1L0.75R, 1L1R, 0.75L1R, 0.5L1R, 0.25L1R, 0L1R.}\label{fig:matchingdata}
 \end{figure}
-
-The results from the third experiment are shown in figure \ref{fig:matchingdata}. Each curve is showing the contrast level in each eye for the different interocular ratios.
-
-Looking at the results for the 48 \% contrast condition, we can observe that, when the ratio in both eyes was set to be one, the target appeared to have the same flickering intensity as the standard when the contrast in both eyes was selected to be, on average, 50 \% (red line). This is also observable for the 24 \% contrast condition, where the target appeared to have the same flickering intensity when the contrast was selected to be around 25 \%. These two results show that the paradigm was working correctly and that the participants could see the flicker properly.
-When the ratio was set to be 0 in one of the two eyes, we observe that, for the target to appear to flicker similarly to the standard, the contrast in the other eye was set to be around double the contrast of the standard. For the 48 \% contrast, when the ratio in the right eye was 0, the contrast in the left eye was around 90 \%, while, when the ratio in the left eye was 0, contrast in the right eye was around 96 \%. For the 24 \% contrast, when the ratio in the right eye was 0, the contrast in the left eye was around 57 \%, while, when the ratio in the left eye was 0, contrast in the right eye was around 50 \%. When looking at the rest of the data, we can see that the points, for both contrast conditions, seem to fall along the line representing a linear combination model, with the results for the 24 \% condition showing a very strong summation that seem to exceed this linear combination. Overall, these results seem to suggest that the processing of temporal luminance modulations seems to follow near linear combination rules, which is in line with our results from experiment 1.
 
 \hypertarget{computational-modelling}{%
 \subsection{Computational modelling}\label{computational-modelling}}
@@ -238,49 +267,55 @@ Matching & 0.56 & 7.96 & 0.05 & -\\
 \addcontentsline{toc}{section}{References}
 
 \hypertarget{refs}{}
-\leavevmode\hypertarget{ref-Anderson1989}{}%
+\begin{CSLReferences}{1}{0}
+\leavevmode\vadjust pre{\hypertarget{ref-Anderson1989}{}}%
 Anderson PA, Movshon JA. 1989. Binocular combination of contrast signals. \emph{Vision Res} \textbf{29}:1115--32. doi:\href{https://doi.org/10.1016/0042-6989(89)90060-6}{10.1016/0042-6989(89)90060-6}
 
-\leavevmode\hypertarget{ref-Angee2021}{}%
+\leavevmode\vadjust pre{\hypertarget{ref-Angee2021}{}}%
 Angée C, Nedelec B, Erjavec E, Rozet J-M, Fares Taie L. 2021. Congenital microcoria: Clinical features and molecular genetics. \emph{Genes (Basel)} \textbf{12}. doi:\href{https://doi.org/10.3390/genes12050624}{10.3390/genes12050624}
 
-\leavevmode\hypertarget{ref-Anstis1998}{}%
+\leavevmode\vadjust pre{\hypertarget{ref-Anstis1998}{}}%
 Anstis S, Ho A. 1998. Nonlinear combination of luminance excursions during flicker, simultaneous contrast, afterimages and binocular fusion. \emph{Vision Res} \textbf{38}:523--39. doi:\href{https://doi.org/10.1016/s0042-6989(97)00167-3}{10.1016/s0042-6989(97)00167-3}
 
-\leavevmode\hypertarget{ref-Baker2018}{}%
+\leavevmode\vadjust pre{\hypertarget{ref-Baker2018}{}}%
 Baker DH, Lygo FA, Meese TS, Georgeson MA. 2018. Binocular summation revisited: Beyond \(\sqrt{2}\). \emph{Psychol Bull} \textbf{144}:1186--1199. doi:\href{https://doi.org/10.1037/bul0000163}{10.1037/bul0000163}
 
-\leavevmode\hypertarget{ref-Campbell1965}{}%
+\leavevmode\vadjust pre{\hypertarget{ref-Campbell1965}{}}%
 Campbell FW, Green DG. 1965. Monocular versus binocular visual acuity. \emph{Nature} \textbf{208}:191--2. doi:\href{https://doi.org/10.1038/208191a0}{10.1038/208191a0}
 
-\leavevmode\hypertarget{ref-Delorme2004}{}%
-Delorme A, Makeig S. 2004. EEGLAB: An open source toolbox for analysis of single-trial eeg dynamics including independent component analysis. \emph{J Neurosci Methods} \textbf{134}:9--21. doi:\href{https://doi.org/10.1016/j.jneumeth.2003.10.009}{10.1016/j.jneumeth.2003.10.009}
+\leavevmode\vadjust pre{\hypertarget{ref-Delorme2004}{}}%
+Delorme A, Makeig S. 2004. EEGLAB: An open source toolbox for analysis of single-trial EEG dynamics including independent component analysis. \emph{J Neurosci Methods} \textbf{134}:9--21. doi:\href{https://doi.org/10.1016/j.jneumeth.2003.10.009}{10.1016/j.jneumeth.2003.10.009}
 
-\leavevmode\hypertarget{ref-Ding2006}{}%
+\leavevmode\vadjust pre{\hypertarget{ref-Ding2006}{}}%
 Ding J, Sperling G. 2006. A gain-control theory of binocular combination. \emph{Proc Natl Acad Sci U S A} \textbf{103}:1141--6. doi:\href{https://doi.org/10.1073/pnas.0509629103}{10.1073/pnas.0509629103}
 
-\leavevmode\hypertarget{ref-Legge1984}{}%
-Legge GE. 1984. Binocular contrast summation--ii. Quadratic summation. \emph{Vision Res} \textbf{24}:385--94. doi:\href{https://doi.org/10.1016/0042-6989(84)90064-6}{10.1016/0042-6989(84)90064-6}
+\leavevmode\vadjust pre{\hypertarget{ref-Kassner2014}{}}%
+Kassner M, Patera W, Bulling A. 2014. Pupil: An open source platform for pervasive eye tracking and mobile gaze-based interactionProceedings of the 2014 {ACM} International Joint Conference on Pervasive and Ubiquitous Computing: Adjunct Publication. UbiComp '14 Adjunct; {ACM}. pp. 1151--1160. doi:\href{https://doi.org/10.1145/2638728.2641695}{10.1145/2638728.2641695}
 
-\leavevmode\hypertarget{ref-Levelt1965}{}%
-Levelt WJ. 1965. BINOCULAR brightness averaging and contour information. \emph{Br J Psychol} \textbf{56}:1--13. doi:\href{https://doi.org/10.1111/j.2044-8295.1965.tb00939.x}{10.1111/j.2044-8295.1965.tb00939.x}
+\leavevmode\vadjust pre{\hypertarget{ref-Legge1984}{}}%
+Legge GE. 1984. Binocular contrast summation--II. Quadratic summation. \emph{Vision Res} \textbf{24}:385--94. doi:\href{https://doi.org/10.1016/0042-6989(84)90064-6}{10.1016/0042-6989(84)90064-6}
 
-\leavevmode\hypertarget{ref-Mathot2018}{}%
+\leavevmode\vadjust pre{\hypertarget{ref-Levelt1965}{}}%
+Levelt WJ. 1965. BINOCULAR BRIGHTNESS AVERAGING AND CONTOUR INFORMATION. \emph{Br J Psychol} \textbf{56}:1--13. doi:\href{https://doi.org/10.1111/j.2044-8295.1965.tb00939.x}{10.1111/j.2044-8295.1965.tb00939.x}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Mathot2018}{}}%
 Mathôt S. 2018. Pupillometry: Psychology, physiology, and function. \emph{J Cogn} \textbf{1}:16. doi:\href{https://doi.org/10.5334/joc.18}{10.5334/joc.18}
 
-\leavevmode\hypertarget{ref-McDougal2010}{}%
+\leavevmode\vadjust pre{\hypertarget{ref-McDougal2010}{}}%
 McDougal DH, Gamlin PD. 2010. The influence of intrinsically-photosensitive retinal ganglion cells on the spectral sensitivity and response dynamics of the human pupillary light reflex. \emph{Vision Res} \textbf{50}:72--87. doi:\href{https://doi.org/10.1016/j.visres.2009.10.012}{10.1016/j.visres.2009.10.012}
 
-\leavevmode\hypertarget{ref-Meese2006}{}%
+\leavevmode\vadjust pre{\hypertarget{ref-Meese2006}{}}%
 Meese TS, Georgeson MA, Baker DH. 2006. Binocular contrast vision at and above threshold. \emph{J Vis} \textbf{6}:1224--43. doi:\href{https://doi.org/10.1167/6.11.7}{10.1167/6.11.7}
 
-\leavevmode\hypertarget{ref-Purves2008}{}%
-Purves D, Brannon EM, Cabeza R, LaBar KS, Huettel SA, Platt ML, Woldorff MG. 2008. Principles of Cognitive Neuroscience. Oxford University Press, Incorporated.
+\leavevmode\vadjust pre{\hypertarget{ref-Purves2008}{}}%
+Purves D, Brannon EM, Cabeza R, LaBar KS, Huettel SA, Platt ML, Woldorff MG. 2008. Principles of {Cognitive} {Neuroscience}. Oxford University Press, Incorporated.
 
-\leavevmode\hypertarget{ref-Wang2015}{}%
+\leavevmode\vadjust pre{\hypertarget{ref-Wang2015}{}}%
 Wang C-A, Munoz DP. 2015. A circuit for pupil orienting responses: Implications for cognitive modulation of pupil size. \emph{Curr Opin Neurobiol} \textbf{33}:134--40. doi:\href{https://doi.org/10.1016/j.conb.2015.03.018}{10.1016/j.conb.2015.03.018}
 
-\leavevmode\hypertarget{ref-Wyatt1981}{}%
+\leavevmode\vadjust pre{\hypertarget{ref-Wyatt1981}{}}%
 Wyatt HJ, Musselman JF. 1981. Pupillary light reflex in humans: Evidence for an unbalanced pathway from nasal retina, and for signal cancellation in brainstem. \emph{Vision Res} \textbf{21}:513--25. doi:\href{https://doi.org/10.1016/0042-6989(81)90097-3}{10.1016/0042-6989(81)90097-3}
+
+\end{CSLReferences}
 
 \end{document}
