@@ -1772,6 +1772,29 @@ knitr::include_graphics(paste0(figdir,'matchingdata.pdf'))
 ```
 
 ## Computational modelling
+Several models have been developed and proposed to describe binocular combination and contrast matching results for spatial contrast. Among these, the models proposed by Ding and Sperling (2006) and Meese and colleagues (2006) are widely accepted. These models incorporate a dynamic contrast gain control, which allows to develop a model that combines binocular summation and interocular suppression
+
+The first model is a multistage model that consists of two pairs of gain control mechanisms that inhibit each other [@Ding2006]. In the earlier stage, the right and left eye channels exert gain control on the other channel. Then, they exert gain control on the other channel’s gain control. Lastly, the outputs from each channel are summed binocularly to determine the binocular signal’s magnitude.
+
+The second model is similar as it also incorporates gain control mechanisms [@Meese2006]. In the first stage, it is applied to the left and right eye channels with suppression from the other eye. Then the signal from the two eyes is summed binocularly and gain control is applied a second time. This second model in particular is interesting and relevant as it was designed to also explain data from matching experiments.
+
+We therefore decided to use and readapt this second model to see if it could be used to explain our three different data sets from experiments 1 and 3. In the first stage, the responses from the right and the left eyes are computed separately, as shown by equation 1 and 2:
+
+_RespL_ = $\frac{(L^q)}{Z + R + w \times R}$ (1)
+
+_RespR_ = $\frac{(R^q)}{Z + R + w \times L}$ (2)
+
+where _L_ and _R_ are the signals from the left and right eyes, _Z_ is a saturation constant, _q_ is an exponent and _w_ is the suppression from the opponent weight.
+
+In the second stage, the responses from the two eyes are summed binocularly:
+
+_Resp(L,R)_ = k $\times$ (RespL + RespR) + n
+
+where _k_ is the noise parameter.
+
+For our analysis, we implemented the model using a Bayesian approach, using the Stan software in Rstudio, which allowed us to generate a posterior parameter distribution. Results for this are shown in figure \@ref(fig:modelfigure)i and the summary of the median parameter values are displayed in table \@ref(tab:paramtable). The key finding is that the pupillometry results display a much higher suppression from the opponent eye, shown by the _w_ parameter in table \@ref(tab:paramtable) and the green line in figure \@ref(fig:modelfigure)i, than the EEG results at the first harmonic (grey line in figure \@ref(fig:modelfigure)i), the EEG results at the second harmonic (purple line in figure \@ref(fig:modelfigure)i) and the matching results (yellow line in figure \@ref(fig:modelfigure)i). These results offer an explanation to the data from the previous experiments: the higher suppression displayed by the pupillometry explains the non-linearity observed in the first experiment, while the lower suppression by the EEG at both harmonics and the matching explains the strong linearity observed in experiments 1 and 3.
+
+Finally, figures \@ref(fig:modelfigure)a-d show the behavioural data for our four main data sets from experiments 1 and 3, and figures \@ref(fig:modelfigure)e-h show the outputs that the model produced based on the median parameter values that are presented in table \@ref(tab:paramtable). We can see that the data outputted by the model has a similar has a similar behaviour to the empirical data that we collected in our experiments. This would seem to suggest that the model can offer a good explanation of our data.
 
 
 ```{r include=FALSE, results='hide'}
@@ -2733,7 +2756,7 @@ dev.off()
 
 ```
 
-```{r modelfigure, fig.cap="Summary of computational modelling. Panels (a-d) show model behaviour for our four main data set, pupillometry (a), first harmonic EEG responses (b), second harmonic EEG responses (c) and contrast matching (d). Panel (e) shows the posterior probability distributions of the interocular suppression parameter for each of the four model fits. The pupillometry distribution (green) is centred about a substantially higher suppressive weight than for the other data types (note the logarithmic x-axis). The black curve shows the (scaled) prior distribution for the weight parameter.", fig.align="center", echo=FALSE}
+```{r modelfigure, fig.cap="Summary of computational modelling. Panels (a-d) show model behaviour for our four main data set, pupillometry (a), first harmonic EEG responses (b), second harmonic EEG responses (c) and contrast matching (d). Panel (i) shows the posterior probability distributions of the interocular suppression parameter for each of the four model fits. The pupillometry distribution (green) is centred about a substantially higher suppressive weight than for the other data types (note the logarithmic x-axis). The black curve shows the (scaled) prior distribution for the weight parameter.", fig.align="center", echo=FALSE}
 
 knitr::include_graphics(paste0(figdir,'modelfigure.pdf'))
 
