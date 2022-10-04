@@ -33,14 +33,6 @@
   \KOMAoptions{parskip=half}}
 \makeatother
 \usepackage{xcolor}
-\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
-\hypersetup{
-  pdftitle={Different rules for binocular combination of luminance in cortical and subcortical pathways},
-  pdfauthor={Federico G. Segala, Aurelio Bruno, Alex R. Wade \& Daniel H. Baker (+Myat? +Joel?)},
-  hidelinks,
-  pdfcreator={LaTeX via pandoc}}
-\urlstyle{same} % disable monospaced font for URLs
 \usepackage[margin=1in]{geometry}
 \usepackage{longtable,booktabs,array}
 \usepackage{calc} % for calculating minipage widths
@@ -95,6 +87,14 @@
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={Different rules for binocular combination of luminance in cortical and subcortical pathways},
+  pdfauthor={Federico G. Segala, Aurelio Bruno, Alex R. Wade \& Daniel H. Baker (+Myat? +Joel?)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
 
 \title{Different rules for binocular combination of luminance in cortical and subcortical pathways}
 \author{Federico G. Segala, Aurelio Bruno, Alex R. Wade \& Daniel H. Baker (+Myat? +Joel?)}
@@ -203,6 +203,15 @@ What is immediately apparent is that, in the same-frequency condition, the binoc
 \caption{Summary of EEG results for N=30 participants. Panel (a) shows a group average waveform for binocular presentation (low pass filtered at 5Hz), with the driving signal plotted at the foot. Panel (b) shows the average Fourier spectrum, and inset scalp distributions. Black dots on the scalp plots indicate electrodes Oz, POz, O1 and O2. Panels (c,d) show contrast response functions at 2Hz for different conditions. Panel (e) shows contrast response functions at 1.6Hz for three conditions. Panels (f-h) are in the same format but for the second harmonic responses. Shaded regions and error bars indicate bootstrapped standard errors.}\label{fig:EEGdata}
 \end{figure}
 
+\begin{figure}
+
+{\centering \includegraphics{Figures/BSratios} 
+
+}
+
+\caption{Ratio of binocular to monocular response for three data types.}\label{fig:BSratios}
+\end{figure}
+
 \hypertarget{experiment-2-1}{%
 \subsection{Experiment 2}\label{experiment-2-1}}
 
@@ -279,13 +288,13 @@ Finally, figures \ref{fig:modelfigure}a-d show the behavioural data for our four
 \hline
 Data set & Z & k & w & Rmax\\
 \hline
-Pupillometry & 2.45 & 0.01 & 0.67 & 0.00024\\
+Pupillometry & 2.37 & 0.01 & 0.67 & 0.00023\\
 \hline
-EEG 1F & 2.78 & 0.15 & 0.03 & 0.00262\\
+EEG 1F & 2.59 & 0.15 & 0.02 & 0.0026\\
 \hline
-EEG 2F & 2.31 & 0.06 & 0.01 & 0.00407\\
+EEG 2F & 2.21 & 0.06 & 0.01 & 0.00404\\
 \hline
-Matching & 0.56 & 7.96 & 0.05 & -\\
+Matching & 0.30 & 5.07 & 0.09 & -\\
 \hline
 \end{tabular}
 \end{table}

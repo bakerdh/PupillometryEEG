@@ -24,12 +24,11 @@ processdata <- 0  # this flag determines the amount of processing, with 4 levels
 # 3 - download all raw data and analyse (requires 48GB of storage)
 
 # check which packages are installed, install the missing ones, and activate
-packagelist <- c('knitr','remotes','tictoc','R.matlab','bookdown','grImport','tiff','pals','ez','gtools','signal','boot','quickpsy','rstan','coda','parallel') # list of CRAN packages
+packagelist <- c('knitr','remotes','tictoc','R.matlab','bookdown','grImport','tiff','pals','ez','gtools','signal','boot','quickpsy','rstan','coda','parallel','osfr') # list of CRAN packages
 missingpackages <- packagelist[!packagelist %in% installed.packages()[,1]]
 if (length(missingpackages)>0){install.packages(missingpackages)}
-if (!'osfr' %in% installed.packages()[,1]){remotes::install_github("centerforopenscience/osfr")}
 if (!'FourierStats' %in% installed.packages()[,1]){remotes::install_github("bakerdh/FourierStats")}
-packagelist <- c(packagelist,'osfr','FourierStats')
+packagelist <- c(packagelist,'FourierStats')
 toinstall <- packagelist[which(!packagelist %in% (.packages()))]
 invisible(lapply(toinstall,library,character.only=TRUE))
 
@@ -141,6 +140,7 @@ In the cross-frequency condtion at 2 Hz (fig. \@ref(fig:pupildata)d), no summati
 
 Figure \@ref(fig:EEGdata) shows the results for EEG. Figure \@ref(fig:EEGdata)a is showing the group average waveform for binocular presentation. Figure \@ref(fig:EEGdata)b is showing the average Fourier spectrum, where we can observe two spikes at 2 and 4 Hz, which show a very clear, non-noisy response to the flickering stimuli at the first and second harmonics. Figures \@ref(fig:EEGdata)c-e show the CRFs at 2 and 1.6 Hz at the first harmonic, and figures \@ref(fig:EEGdata)f-h show the CRFs at the second harmonic. 
 What is immediately apparent is that, in the same-frequency condition, the binocular responses at the first (fig. \@ref(fig:EEGdata)c) and second (fig. \@ref(fig:EEGdata)f) harmonics are showing very high summation of binocular signals compared to the pupillometry. The amplitudes of the binocular responses are twice, and even more than twice, the amplitudes of the monocular responses. This is especially clear at the highest contrasts. This is clearly displayed in figure, which is showing the binocular to monocular ratios for the EEG at both harmonics and the pupillometry. For the cross-frequency condition at 2 Hz and 4 Hz (fig. \@ref(fig:EEGdata)d and \@ref(fig:EEGdata)g), there is almost no summation, with the amplitudes of the binocular and dichoptic configurations being equal, and even smaller, than the amplitudes of the monocular signals. This pattern is also observable in the cross-frequency condition at 1.6 (fig. \@ref(fig:EEGdata)e) and 3.2 Hz (fig. \@ref(fig:EEGdata)h). This pattern of results seems to suggest that processing of temporal luminance modulations happens in a  linear way in the visual cortex. Moreover, the lower amplitudes for the binocular and the dichoptic configurations in the cross-frequency conditions seem to indicate the presence of interocular suppression in the visual cortex. 
+
 ```{r include=FALSE, results='hide'}
 
 # (download and) analyse individual participant data for experiment 1
@@ -394,37 +394,37 @@ for (participant in 1:30){
  
 d <- dir(datadir,pattern='*summary.RData',full.names=TRUE)
 
-tempmasksP <- array(0,dim=c(length(d),6,5))
-tempmeansP <- tempmasksP
-tempmasksE <- array(0,dim=c(length(d),64,6,5))
-tempmeansE <- tempmasksE
-tempmeansE2 <- tempmeansE
-tempmasksE2 <- tempmasksE
-tempspectraP <- array(0,dim=c(length(d),300))
-tempspectraE <- array(0,dim=c(length(d),300))
-tempwavesP <- array(0,dim=c(length(d),1680))
-tempwavesE <- array(0,dim=c(length(d),14000))
+allmasksP <- array(0,dim=c(length(d),6,5))
+allmeansP <- allmasksP
+allmasksE <- array(0,dim=c(length(d),64,6,5))
+allmeansE <- allmasksE
+allmeansE2 <- allmeansE
+allmasksE2 <- allmasksE
+allspectraP <- array(0,dim=c(length(d),300))
+allspectraE <- array(0,dim=c(length(d),300))
+allwavesP <- array(0,dim=c(length(d),1680))
+allwavesE <- array(0,dim=c(length(d),14000))
 
   for (s in 1:length(d)){
     
     load(d[s])
     
-  tempmasksP[s,,] <- cleanmasksP
-  tempmeansP[s,,] <- cleanmeansP
-  tempspectraP[s,] <- meanspectraP
-  tempspectraE[s,] <- meanspectraE
-  tempwavesP[s,] <- meanwavesP
-  tempwavesE[s,] <- meanwavesE
-  tempmeansE[s,,,] <- cleanmeansE
-  tempmasksE[s,,,] <- cleanmasksE
-  tempmeansE2[s,,,] <- cleanmeansE2
-  tempmasksE2[s,,,] <- cleanmasksE2
+  allmasksP[s,,] <- cleanmasksP
+  allmeansP[s,,] <- cleanmeansP
+  allspectraP[s,] <- meanspectraP
+  allspectraE[s,] <- meanspectraE
+  allwavesP[s,] <- meanwavesP
+  allwavesE[s,] <- meanwavesE
+  allmeansE[s,,,] <- cleanmeansE
+  allmasksE[s,,,] <- cleanmasksE
+  allmeansE2[s,,,] <- cleanmeansE2
+  allmasksE2[s,,,] <- cleanmasksE2
     
   }
 
 electrodeindices <- match(targetelectrodes,electrodes)-2
 
-tempspectraP <- tempspectraP[-c(2,4,13,20,26),]
+allspectraP <- allspectraP[-c(2,4,13,20,26),]
 
 cleanmeansP <- matrix(0,nrow=6,ncol=5)
 cleanmeansPCI <- array(0,c(2,6,5))
@@ -451,7 +451,7 @@ cleanmasksE2CI <- array(0,c(2,64,6,5))
 for (cond in 1:6){
   for (level in 1:5){
     
-    temp <- tempmeansP[,cond,level]
+    temp <- allmeansP[,cond,level]
     cartdata <- data.frame(Re(temp),Im(temp))
     if (sum(cartdata)!=0){
       D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
@@ -462,7 +462,7 @@ for (cond in 1:6){
     cleanmeansPCI[2,cond,level] <- mbs$upperCI
     }    
       
-    temp <- tempmasksP[,cond,level]
+    temp <- allmasksP[,cond,level]
     cartdata <- data.frame(Re(temp),Im(temp))
     if (sum(cartdata)!=0){
       D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
@@ -474,7 +474,7 @@ for (cond in 1:6){
 }
   
     
-      temp <- apply(tempmeansE[,electrodeindices,cond,level],1,mean)
+      temp <- apply(allmeansE[,electrodeindices,cond,level],1,mean)
       cartdata <- data.frame(Re(temp),Im(temp))
       if (sum(cartdata)!=0){
         D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
@@ -485,7 +485,7 @@ for (cond in 1:6){
     cleanmeansEavCI[2,cond,level] <- mbs$upperCI
       }
       
-temp <- apply(tempmasksE[,electrodeindices,cond,level],1,mean)
+temp <- apply(allmasksE[,electrodeindices,cond,level],1,mean)
       cartdata <- data.frame(Re(temp),Im(temp))
       if (sum(cartdata)!=0){
         D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
@@ -496,7 +496,7 @@ mbs <- amperrors(temp[i],method='boot',quantiles=68,nresamples=nbootstraps)
     cleanmasksEavCI[2,cond,level] <- mbs$upperCI
         }
 
-temp <- apply(tempmeansE2[,electrodeindices,cond,level],1,mean)
+temp <- apply(allmeansE2[,electrodeindices,cond,level],1,mean)
       cartdata <- data.frame(Re(temp),Im(temp))
       if (sum(cartdata)!=0){
         D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
@@ -507,7 +507,7 @@ temp <- apply(tempmeansE2[,electrodeindices,cond,level],1,mean)
     cleanmeansE2avCI[2,cond,level] <- mbs$upperCI
         }
 
-      temp <- apply(tempmasksE2[,electrodeindices,cond,level],1,mean)
+      temp <- apply(allmasksE2[,electrodeindices,cond,level],1,mean)
       cartdata <- data.frame(Re(temp),Im(temp))
       if (sum(cartdata)!=0){
         D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
@@ -520,7 +520,7 @@ temp <- apply(tempmeansE2[,electrodeindices,cond,level],1,mean)
       
     for (ch in 1:64){
       
-      temp <- tempmeansE[,ch,cond,level]
+      temp <- allmeansE[,ch,cond,level]
       cartdata <- data.frame(Re(temp),Im(temp))
       if (sum(cartdata)!=0){
         D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
@@ -531,7 +531,7 @@ temp <- apply(tempmeansE2[,electrodeindices,cond,level],1,mean)
     cleanmeansECI[2,ch,cond,level] <- mbs$upperCI
 }
 
-      temp <- tempmasksE[,ch,cond,level]
+      temp <- allmasksE[,ch,cond,level]
       cartdata <- data.frame(Re(temp),Im(temp))
       if (sum(cartdata)!=0){
         D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
@@ -542,7 +542,7 @@ mbs <- amperrors(temp[i],method='boot',quantiles=68,nresamples=nbootstraps)
     cleanmasksECI[2,ch,cond,level] <- mbs$upperCI
         }
 
-      temp <- tempmeansE2[,ch,cond,level]
+      temp <- allmeansE2[,ch,cond,level]
       cartdata <- data.frame(Re(temp),Im(temp))
       if (sum(cartdata)!=0){
         D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
@@ -553,7 +553,7 @@ mbs <- amperrors(temp[i],method='boot',quantiles=68,nresamples=nbootstraps)
     cleanmeansE2CI[2,ch,cond,level] <- mbs$upperCI
         }
       
-      temp <- tempmasksE2[,ch,cond,level]
+      temp <- allmasksE2[,ch,cond,level]
       cartdata <- data.frame(Re(temp),Im(temp))
       if (sum(cartdata)!=0){
         D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
@@ -573,7 +573,7 @@ meanspectraECI <- array(0,c(2,300))
 
 for (f in 2:300){
   
-        temp <- tempspectraP[,f]
+        temp <- allspectraP[,f]
       cartdata <- data.frame(Re(temp),Im(temp))
       if (sum(cartdata)!=0){
         D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
@@ -584,7 +584,7 @@ meanspectraPCI[1,f] <- mbs$lowerCI
 meanspectraPCI[2,f] <- mbs$upperCI
       }
       
-        temp <- tempspectraE[,f]
+        temp <- allspectraE[,f]
       cartdata <- data.frame(Re(temp),Im(temp))
       if (sum(cartdata)!=0){
         D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
@@ -598,11 +598,11 @@ meanspectraECI[2,f] <- mbs$upperCI
 
 meanwavesP <- NULL
 meanwavesE <- NULL
-meanwavesPCI <- array(0,dim=c(2,dim(tempwavesP)[2]))
-meanwavesECI <- array(0,dim=c(2,dim(tempwavesE)[2]))
-nsubjs <- dim(tempwavesP)[1]
-for (t in 1:dim(tempwavesP)[2]){
-  temp <- tempwavesP[,t]
+meanwavesPCI <- array(0,dim=c(2,dim(allwavesP)[2]))
+meanwavesECI <- array(0,dim=c(2,dim(allwavesE)[2]))
+nsubjs <- dim(allwavesP)[1]
+for (t in 1:dim(allwavesP)[2]){
+  temp <- allwavesP[,t]
   i <- which(abs(temp-mean(temp))<(SDthresh*sd(temp)))
   meanwavesP[t] <- mean(temp[i])
   bspop <- NULL
@@ -610,8 +610,8 @@ for (t in 1:dim(tempwavesP)[2]){
   meanwavesPCI[,t] <- quantile(bspop,c(0.16,0.84),na.rm=TRUE)
 }
 
-for (t in 1:dim(tempwavesE)[2]){
-    temp <- tempwavesE[,t]
+for (t in 1:dim(allwavesE)[2]){
+    temp <- allwavesE[,t]
   i <- which(abs(temp-mean(temp))<(SDthresh*sd(temp)))
   meanwavesE[t] <- mean(temp[i])
   bspop <- NULL
@@ -619,7 +619,7 @@ for (t in 1:dim(tempwavesE)[2]){
   meanwavesECI[,t] <- quantile(bspop,c(0.16,0.84),na.rm=TRUE)
 }
 
-save(file=paste0(datadir,'Averagedata.RData'),list=c('cleanmeansP','cleanmeansPCI','cleanmasksP','cleanmasksPCI','cleanmeansEav','cleanmeansEavCI','cleanmasksEav','cleanmasksEavCI','cleanmeansE2av','cleanmeansE2avCI','cleanmasksE2av','cleanmasksE2avCI','cleanmeansE','cleanmeansECI','cleanmasksECI','cleanmeansE2','cleanmeansE2CI','cleanmasksE2','cleanmasksE2CI','meanspectraP','meanspectraPCI','meanspectraE','meanspectraECI','meanwavesP','meanwavesE','meanwavesPCI','meanwavesECI','electrodes'))
+save(file=paste0(datadir,'Averagedata.RData'),list=c('cleanmeansP','cleanmeansPCI','cleanmasksP','cleanmasksPCI','cleanmeansEav','cleanmeansEavCI','cleanmasksEav','cleanmasksEavCI','cleanmeansE2av','cleanmeansE2avCI','cleanmasksE2av','cleanmasksE2avCI','cleanmeansE','cleanmeansECI','cleanmasksECI','cleanmeansE2','cleanmeansE2CI','cleanmasksE2','cleanmasksE2CI','meanspectraP','meanspectraPCI','meanspectraE','meanspectraECI','meanwavesP','meanwavesE','meanwavesPCI','meanwavesECI','electrodes','allmeansP','allmeansE','allmeansE2'))
 
 }
 
@@ -823,8 +823,6 @@ dev.off()
   
   file.remove(c('CRF1p.ps','CRF2p.ps','CRF3p.ps','SpecP.ps','timecourseP.ps'))
   file.remove(c('CRF1p.ps.xml','CRF2p.ps.xml','CRF3p.ps.xml','SpecP.ps.xml','timecourseP.ps.xml'))
-
-
 
 }
 
@@ -1249,8 +1247,6 @@ dev.off()
   file.remove(c('CRF1e.ps','CRF2e.ps','CRF3e.ps','CRF1e2.ps','CRF2e2.ps','CRF3e2.ps','SpecE.ps','timecourseE.ps','head1.tiff','head2.tiff'))
   file.remove(c('CRF1e.ps.xml','CRF2e.ps.xml','CRF3e.ps.xml','CRF1e2.ps.xml','CRF2e2.ps.xml','CRF3e2.ps.xml','SpecE.ps.xml','timecourseE.ps.xml'))
 
-
-
 }
 
 ```
@@ -1261,10 +1257,103 @@ knitr::include_graphics(paste0(figdir,'EEGdata.pdf'))
 
 ```
 
+```{r include=FALSE, results='hide'}
+
+# generate plot showing the bin:mon ratio for three data sets
+
+if (processdata > 0){
+
+contrastsdB <- 20*log10(c(6,12,24,48,96))
+electrodeindices <- match(targetelectrodes,electrodes)-2
+
+         if (!file.exists(paste0(datadir,'Averagedata.RData'))){
+           # download it from OSF
+           if (!exists('osffilesP')){
+           osfnode <- '2qu6y'
+           osfproject <- osf_retrieve_node(osfnode)
+          osffilesP <- osf_ls_files(osfproject,n_max=300)}
+          fid <- which(osffilesP$name=='Averagedata.RData')
+          osf_download(osffilesP[fid,],datadir,progress=TRUE)
+         }
+
+load(file=paste0(datadir,'Averagedata.RData'))
+
+allPratios <- 20*log10(abs(allmeansP[,2,])/abs(allmeansP[,1,]))
+allEratios <- 20*log10(abs(apply(allmeansE[,electrodeindices,2,],c(1,3),mean))/abs(apply(allmeansE[,electrodeindices,1,],c(1,3),mean)))
+allE2ratios <- 20*log10(abs(apply(allmeansE2[,electrodeindices,2,],c(1,3),mean))/abs(apply(allmeansE2[,electrodeindices,1,],c(1,3),mean)))
+
+PratiosCI <- matrix(0,nrow=2,ncol=5)
+EratiosCI <- matrix(0,nrow=2,ncol=5)
+E2ratiosCI <- matrix(0,nrow=2,ncol=5)
+for (level in 1:5){
+    bspop <- NULL
+    for (n in 1:nbootstraps){
+      bspop[n] <- mean(sample(allPratios[,level],nrow(allPratios),replace=TRUE))
+    }
+    PratiosCI[,level] <- quantile(bspop,c((1-0.68)/2,1-((1-0.68)/2)))
+     bspop <- NULL
+    for (n in 1:nbootstraps){
+      bspop[n] <- mean(sample(allEratios[,level],nrow(allEratios),replace=TRUE))
+    }
+    EratiosCI[,level] <- quantile(bspop,c((1-0.68)/2,1-((1-0.68)/2)))
+    bspop <- NULL
+    for (n in 1:nbootstraps){
+      bspop[n] <- mean(sample(allE2ratios[,level],nrow(allE2ratios),replace=TRUE))
+    }
+    E2ratiosCI[,level] <- quantile(bspop,c((1-0.68)/2,1-((1-0.68)/2)))
+}
+    
+plotlims <- c(15,40,-3,12)  
+ticklocsx <- contrastsdB
+ticklabelsx <-c(6,12,24,48,96) 
+ticklocsy <- seq(-3,12,3)    # locations of tick marks on y axis
+ticklabelsy <- c(expression(1/sqrt(2)),'1',expression(sqrt(2)),'2',expression(2*sqrt(2)),'4')
+
+pdf("Figures/BSratios.pdf", onefile = FALSE, paper = "special", height = 5.5, width = 5.5)
+
+par(pty="s")  # make axis square
+plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=plotlims[1:2], ylim=plotlims[3:4])  
+axis(1, at=ticklocsx, tck=0.01, lab=F, lwd=2)     
+axis(2, at=ticklocsy, tck=0.01, lab=F, lwd=2)
+mtext(text = ticklabelsx, side = 1, at=ticklocsx)     
+mtext(text = ticklabelsy, side = 2, at=ticklocsy, line=0.2, las=1) 
+title(xlab="Target contrast (%)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)  
+title(ylab="Bin:Mon ratio", col.lab=rgb(0,0,0), line=1.5, cex.lab=1.5)
+
+arrows(contrastsdB,colMeans(allPratios),contrastsdB,PratiosCI[1,],lwd=3,col=colpal[3],length=0.05,angle=90)
+arrows(contrastsdB,colMeans(allPratios),contrastsdB,PratiosCI[2,],lwd=3,col=colpal[3],length=0.05,angle=90)
+arrows(contrastsdB,colMeans(allEratios),contrastsdB,EratiosCI[1,],lwd=3,col=colpal[4],length=0.05,angle=90)
+arrows(contrastsdB,colMeans(allEratios),contrastsdB,EratiosCI[2,],lwd=3,col=colpal[4],length=0.05,angle=90)
+arrows(contrastsdB,colMeans(allE2ratios),contrastsdB,E2ratiosCI[1,],lwd=3,col=colpal[5],length=0.05,angle=90)
+arrows(contrastsdB,colMeans(allE2ratios),contrastsdB,E2ratiosCI[2,],lwd=3,col=colpal[5],length=0.05,angle=90)
+  
+lines(contrastsdB,colMeans(allPratios), col=colpal[3], lwd=3, cex=0.5)
+lines(contrastsdB,colMeans(allEratios), col=colpal[4], lwd=3, cex=0.5)
+lines(contrastsdB,colMeans(allE2ratios), col=colpal[5], lwd=3, cex=0.5)
+
+points(contrastsdB,colMeans(allPratios), pch = 21, col='black', bg=colpal[3], cex=1.6, lwd=3) 
+points(contrastsdB,colMeans(allEratios), pch = 22, col='black', bg=colpal[4], cex=1.6, lwd=3)
+points(contrastsdB,colMeans(allE2ratios), pch = 23, col='black', bg=colpal[5], cex=1.6, lwd=3)
+
+legend(15,12,c('Pupillometry','EEG 1F', 'EEG 2F'), pch=21:23, pt.bg=colpal[3:5],box.lwd=2,pt.cex=1.6,pt.lwd=3)
+
+dev.off()
+
+}
+
+
+```
+
+```{r BSratios, fig.cap="Ratio of binocular to monocular response for three data types.", fig.align="center", echo=FALSE}
+
+knitr::include_graphics(paste0(figdir,'BSratios.pdf'))
+
+```
 
 
 ## Experiment 2
 The results from the second experiment are shown in \@ref(fig:TFdata). Figure \@ref(fig:TFdata)a is showing the Fourier spectra for responses to binocular flicker at the 5 different frequencies (2, 4, 8, 16, 30 Hz). We can observe that from 2 to 16 Hz, we recorded very clear and significant signals, as we can observe spikes at the respective frequencies and their subsequent harmonics. However, at 30 Hz, the responses recorded were mainly noise, with no clear data recorded. This is also reflected in figure \@ref(fig:TFdata)b, where we observe almost no amplitude recorded for monocular and binocular responses at 30 Hz. The rest of figure \@ref(fig:TFdata)b is showing the response at each stimulation frequency. We can see that there is an increase in the amplitudes from 2 Hz to 8 Hz and a decrease at 16 Hz. In general, we observe that the binocular response is twice, and more than twice, the monocular response from 2 to 16 Hz (fig. \@ref(fig:TFdata)c), suggesting that binocular facilitation is happening at higher frequencies. However, at 30 Hz, this facilitation is lost (the binocular and monocular responses are the same, as demonstrated by the binocular to monocular ratio being 1in figure \@ref(fig:TFdata)c). The fact that the signal recorded at the highest frequency is mainly noise would seem to suggest that the visual cortex cannot process temporal luminance modulations anymore.
+
 ```{r include=FALSE, results='hide'}
 
 # (download and) analyse the raw data from the temporal frequency experiment
@@ -1626,6 +1715,7 @@ The results from the third experiment are shown in figure \@ref(fig:matchingdata
 Looking at the results for the 48 \% contrast condition, we can observe that, when the match was presented binocularly (both eyes saw the same stimulus), the match appeared to have the same flickering intensity as the standard when the contrast in both eyes was selected to be, on average, 50 \% (red line). This is also observable for the 24 \% contrast condition, where the match appeared to have the same flickering intensity as the standard when the contrast was selected to be around 25 \%. These two results show that the paradigm was working correctly and that the participants could see the flicker properly.
 
 When the match was presented monocularly (only one eye was presented with a flickering stimulus), we observe that, for the match to appear to flicker similarly to the standard, the contrast in that eye was set to be around double the contrast of the standard. When the flicker was presented only to the left eye, for the 48 \% contrast, the contrast of the match was around 90 \%, and, for the 24 \% contrast, the contrast of the match was around 57 \%. When the flicker was presented only to the right eye, for the 48 \% contrast, the contrast in the right eye was around 96 \%, and, for the 24 \% contrast, the contrast was around 50 \%. When looking at the intermediate condition, we can see that the points, for both contrast conditions, seem to fall along the main diagonal representing the linear summation prediction, with the results for the 24 \% condition showing a very strong summation that seem to exceed this prediction. Overall, these results seem to suggest that the way we perceive temporal luminance modulations follows near linear combination rules, which is in line with the processes observed in the visual cortex in experiment 1 (fig. \@ref(fig:EEGdata)).
+
 ```{r include=FALSE, results='hide'}
 
 # (download and) analyse individual participant data for the matching experiment
@@ -1977,23 +2067,23 @@ for (participant in 1:30){
 
 d <- dir(datadir,pattern='*summary.RData',full.names=TRUE)
 
-tempmasksP <- array(0,dim=c(length(d),6,5))
-tempmeansP <- tempmasksP
-tempmasksE <- array(0,dim=c(length(d),64,6,5))
-tempmeansE <- tempmasksE
-tempmeansE2 <- tempmeansE
-tempmasksE2 <- tempmasksE
+allmasksP <- array(0,dim=c(length(d),6,5))
+allmeansP <- allmasksP
+allmasksE <- array(0,dim=c(length(d),64,6,5))
+allmeansE <- allmasksE
+allmeansE2 <- allmeansE
+allmasksE2 <- allmasksE
 
   for (s in 1:length(d)){
     
     load(d[s])
     
-  tempmasksP[s,,] <- cleanmasksP
-  tempmeansP[s,,] <- cleanmeansP
-  tempmeansE[s,,,] <- cleanmeansE
-  tempmasksE[s,,,] <- cleanmasksE
-  tempmeansE2[s,,,] <- cleanmeansE2
-  tempmasksE2[s,,,] <- cleanmasksE2
+  allmasksP[s,,] <- cleanmasksP
+  allmeansP[s,,] <- cleanmeansP
+  allmeansE[s,,,] <- cleanmeansE
+  allmasksE[s,,,] <- cleanmasksE
+  allmeansE2[s,,,] <- cleanmeansE2
+  allmasksE2[s,,,] <- cleanmasksE2
     
   }
   electrodeindices <- match(targetelectrodes,electrodes)-2
@@ -2007,10 +2097,10 @@ tempmasksE2 <- tempmasksE
   s <- NULL
   w <- NULL
   i <- 0
-  for (subj in 1:dim(tempmeansP)[1]){
+  for (subj in 1:dim(allmeansP)[1]){
     for (cond in 1:length(condlist)){
       for (cont in 1:length(contlist)){
-        dp <- abs(tempmeansP[subj,condlist[cond],cont])
+        dp <- abs(allmeansP[subj,condlist[cond],cont])
         if (is.na(dp)==0){
           if (is.infinite(dp)==0){
           i <- i + 1
@@ -2033,10 +2123,10 @@ pupildatalist = list(x = x, y = y, s = s, w = w, c = c, Nsubj = max(s), Ntotal =
   s <- NULL
   w <- NULL
   i <- 0
-  for (subj in 1:dim(tempmeansE)[1]){
+  for (subj in 1:dim(allmeansE)[1]){
     for (cond in 1:length(condlist)){
       for (cont in 1:length(contlist)){
-        dp <- abs(mean(tempmeansE[subj,electrodeindices,condlist[cond],cont]))
+        dp <- abs(mean(allmeansE[subj,electrodeindices,condlist[cond],cont]))
         if (is.na(dp)==0){
           if (is.infinite(dp)==0){
             i <- i + 1
@@ -2059,10 +2149,10 @@ pupildatalist = list(x = x, y = y, s = s, w = w, c = c, Nsubj = max(s), Ntotal =
   s <- NULL
   w <- NULL
   i <- 0
-  for (subj in 1:dim(tempmeansE)[1]){
+  for (subj in 1:dim(allmeansE)[1]){
     for (cond in 1:length(condlist)){
       for (cont in 1:length(contlist)){
-        dp <- abs(mean(tempmeansE2[subj,electrodeindices,condlist[cond],cont]))
+        dp <- abs(mean(allmeansE2[subj,electrodeindices,condlist[cond],cont]))
         if (is.na(dp)==0){
           if (is.infinite(dp)==0){
             i <- i + 1
@@ -2139,37 +2229,76 @@ osf_download(osffilesP[fid,],datadir,progress=TRUE)
 
   load(paste0(datadir,'modeloutput.RData'))
   
+  nchains <- dim(pupilsamples)[2]
+  pupilweightpop <- NULL
+  pupilZpop <- NULL
+  pupilKpop <- NULL
+  pupilRpop <- NULL
+  for (n in 1:nchains){
+  pupilweightpop <- c(pupilweightpop,pupilsamples@sim$samples[[n]]$wtmu)
+  pupilZpop <- c(pupilZpop,pupilsamples@sim$samples[[n]]$Zmu)
+  pupilKpop <- c(pupilKpop,pupilsamples@sim$samples[[n]]$kmu)
+  pupilRpop <- c(pupilRpop,pupilsamples@sim$samples[[n]]$Rmaxmu)
+  }
+  pupilW <- median(pupilweightpop)
+  pupilZ <- median(pupilZpop)
+  pupilK <- median(pupilKpop)
+  pupilRmax <- median(pupilRpop)
   
-  pupilweightpop <- pupilsamples@sim$samples[[1]]$wtmu
-  pupilW <- median(pupilsamples@sim$samples[[1]]$wtmu)
-  pupilZ <- median(pupilsamples@sim$samples[[1]]$Zmu)
-  pupilK <- median(pupilsamples@sim$samples[[1]]$kmu)
-  pupilRmax <- median(pupilsamples@sim$samples[[1]]$Rmaxmu)
   
-  EEGweightpop <- EEG1Fsamples@sim$samples[[1]]$wtmu
-  EEGW <- median(EEG1Fsamples@sim$samples[[1]]$wtmu)
-  EEGZ <- median(EEG1Fsamples@sim$samples[[1]]$Zmu)
-  EEGK <- median(EEG1Fsamples@sim$samples[[1]]$kmu)
-  EEGRmax <- median(EEG1Fsamples@sim$samples[[1]]$Rmaxmu)
+  nchains <- dim(EEG1Fsamples)[2]
+  EEGweightpop <- NULL
+  EEGZpop <- NULL
+  EEGKpop <- NULL
+  EEGRpop <- NULL
+  for (n in 1:nchains){
+  EEGweightpop <- c(EEGweightpop,EEG1Fsamples@sim$samples[[n]]$wtmu)
+  EEGZpop <- c(EEGZpop,EEG1Fsamples@sim$samples[[n]]$Zmu)
+  EEGKpop <- c(EEGKpop,EEG1Fsamples@sim$samples[[n]]$kmu)
+  EEGRpop <- c(EEGRpop,EEG1Fsamples@sim$samples[[n]]$Rmaxmu)
+  }
+  EEGW <- median(EEGweightpop)
+  EEGZ <- median(EEGZpop)
+  EEGK <- median(EEGKpop)
+  EEGRmax <- median(EEGRpop)
   
-  EEG2weightpop <- EEG2Fsamples@sim$samples[[1]]$wtmu
-  EEG2W <- median(EEG2Fsamples@sim$samples[[1]]$wtmu)
-  EEG2Z <- median(EEG2Fsamples@sim$samples[[1]]$Zmu)
-  EEG2K <- median(EEG2Fsamples@sim$samples[[1]]$kmu)
-  EEG2Rmax <- median(EEG2Fsamples@sim$samples[[1]]$Rmaxmu)
-  
-  matchingweightpop <- matchingsamples@sim$samples[[1]]$wmu
-  matchingW <- median(matchingsamples@sim$samples[[1]]$wmu)
-  matchingZ <- median(matchingsamples@sim$samples[[1]]$Zmu)
-  matchingK <- median(matchingsamples@sim$samples[[1]]$kmu)
-  
+  nchains <- dim(EEG2Fsamples)[2]
+  EEG2weightpop <- NULL
+  EEG2Zpop <- NULL
+  EEG2Kpop <- NULL
+  EEG2Rpop <- NULL
+  for (n in 1:nchains){
+  EEG2weightpop <- c(EEG2weightpop,EEG2Fsamples@sim$samples[[n]]$wtmu)
+  EEG2Zpop <- c(EEG2Zpop,EEG2Fsamples@sim$samples[[n]]$Zmu)
+  EEG2Kpop <- c(EEG2Kpop,EEG2Fsamples@sim$samples[[n]]$kmu)
+  EEG2Rpop <- c(EEG2Rpop,EEG2Fsamples@sim$samples[[n]]$Rmaxmu)
+  }
+  EEG2W <- median(EEG2weightpop)
+  EEG2Z <- median(EEG2Zpop)
+  EEG2K <- median(EEG2Kpop)
+  EEG2Rmax <- median(EEG2Rpop)
+
+  nchains <- dim(matchingsamples)[2]
+  matchingweightpop <- NULL
+  matchingZpop <- NULL
+  matchingKpop <- NULL
+  for (n in 1:nchains){
+  matchingweightpop <- c(matchingweightpop,matchingsamples@sim$samples[[n]]$wmu)
+  matchingZpop <- c(matchingZpop,matchingsamples@sim$samples[[n]]$Zmu)
+  matchingKpop <- c(matchingKpop,matchingsamples@sim$samples[[n]]$kmu)
+  }
+  matchingW <- median(matchingweightpop)
+  matchingZ <- median(matchingZpop)
+  matchingK <- median(matchingKpop)
+
+
   if (processdata > 0){
     
 postscript('posteriors.ps', horizontal = FALSE, onefile = FALSE, paper = "special", height = 5.5, width = 5.5)
 
-plotlims <- c(-48,12,0,0.5) 
+plotlims <- c(-48,12,0,0.6) 
 ticklocsx <- seq(-48,12,12)    
-ticklocsy <- seq(0,0.5,0.1)    
+ticklocsy <- seq(0,0.6,0.1)    
 ticklabelsx <- c('1/256','1/64','1/16','1/4','1','4')        
 ticklabelsy <- ticklocsy    # set labels for y ticks
 
@@ -2199,14 +2328,14 @@ prior <- dnorm(10^((-48:12)/20),1,0.5)
 prior <- 0.3*prior/max(prior)
 lines(-48:12,prior)
 
-lines(20*log10(c(mean(pupilW),mean(pupilW))),c(0,0.3),lwd=3,col=colpal[3])
-lines(20*log10(c(mean(EEGW),mean(EEGW))),c(0,0.3),lwd=3,col=colpal[4])
-lines(20*log10(c(mean(EEG2W),mean(EEG2W))),c(0,0.3),lwd=3,col=colpal[5])
-lines(20*log10(c(mean(matchingW),mean(matchingW))),c(0,0.3),lwd=3,col=colpal[6])
+lines(20*log10(c(mean(pupilW),mean(pupilW))),c(0,0.6),lwd=3,col=colpal[3])
+lines(20*log10(c(mean(EEGW),mean(EEGW))),c(0,0.6),lwd=3,col=colpal[4])
+lines(20*log10(c(mean(EEG2W),mean(EEG2W))),c(0,0.6),lwd=3,col=colpal[5])
+lines(20*log10(c(mean(matchingW),mean(matchingW))),c(0,0.6),lwd=3,col=colpal[6])
 
-legend(-48,0.5,c('Prior','Pupillometry','EEG 1F','EEG 2F','Matching'),col=c('black',colpal[3:6]),lwd=c(1,3,3,3,3),lty=1, box.lwd=2, bg='white')
+legend(-48,0.6,c('Prior','Pupillometry','EEG 1F','EEG 2F','Matching'),col=c('black',colpal[3:6]),lwd=c(1,3,3,3,3),lty=1, box.lwd=2, bg='white')
 
-text(9,0.48,'(i)',cex=1.25,adj=0.5)
+text(9,0.58,'(i)',cex=1.25,adj=0.5)
 
 dev.off()
 
@@ -2749,8 +2878,6 @@ dev.off()
   
   file.remove(c('CRF1e.ps','CRF2e.ps','CRF1p.ps','matchingmodel.ps','matchingdata.ps','pdata.ps','edata.ps','edata2.ps','posteriors.ps'))
   file.remove(c('CRF1e.ps.xml','CRF2e.ps.xml','CRF1p.ps.xml','matchingmodel.ps.xml','matchingdata.ps.xml','pdata.ps.xml','edata.ps.xml','edata2.ps.xml','posteriors.ps.xml'))
-
-
 
 }
 
