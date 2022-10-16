@@ -1,6 +1,6 @@
 ---
-title: "Different rules for binocular combination of luminance in cortical and subcortical pathways"
-author: "Federico G. Segala, Aurelio Bruno, Alex R. Wade &  Daniel H. Baker (+Myat? +Joel?)"
+title: "Different rules for binocular combination of luminance flicker in cortical and subcortical pathways"
+author: "Federico G. Segala, Aurelio Bruno, Myat T. Aung, Alex R. Wade &  Daniel H. Baker"
 date: "`r Sys.Date()`"
 output:
   bookdown::pdf_document2:
@@ -24,7 +24,7 @@ processdata <- 0  # this flag determines the amount of processing, with 4 levels
 # 3 - download all raw data and analyse (requires 48GB of storage)
 
 # check which packages are installed, install the missing ones, and activate
-packagelist <- c('knitr','remotes','tictoc','R.matlab','bookdown','grImport','tiff','pals','ez','gtools','signal','boot','quickpsy','rstan','coda','parallel','osfr') # list of CRAN packages
+packagelist <- c('knitr','remotes','tictoc','R.matlab','bookdown','grImport','png','tiff','pals','ez','gtools','signal','boot','quickpsy','rstan','coda','parallel','osfr') # list of CRAN packages
 missingpackages <- packagelist[!packagelist %in% installed.packages()[,1]]
 if (length(missingpackages)>0){install.packages(missingpackages)}
 if (!'FourierStats' %in% installed.packages()[,1]){remotes::install_github("bakerdh/FourierStats")}
@@ -61,6 +61,87 @@ v4Interp <- function(df, xo, yo, rmax = .75, gridRes = 67) {
   names(outDf)[1:length(yo[1,])+1] <- yo[1,]
   return(outDf)}
 
+anovacirc2way <- function(data, groupA=NULL, groupB=NULL, participant=NULL){
+  
+  grouplabelsA <- groupA
+  grouplabelsB <- groupB
+  participantlabels <- participant
+  datavals <- data
+
+  grouplabelsA <- as.factor(grouplabelsA)
+  factorlistA <- levels(grouplabelsA)
+  grouplabelsB <- as.factor(grouplabelsB)
+  factorlistB <- levels(grouplabelsB)
+  participantlabels <- as.factor(participantlabels)
+  participantlist <- levels(participantlabels)
+  
+  grandmean <- mean(datavals)
+  grandvar <- sum(abs(datavals - grandmean)^2)/(length(datavals)-1)
+  
+    SST <- grandvar*(length(datavals) - 1)
+    
+    SSW <- 0
+    for (n in 1:nlevels(participantlabels)){SSW <- SSW + sum(abs(datavals[which(participantlabels==participantlist[n])] - mean(datavals[which(participantlabels==participantlist[n])]))^2)}
+    dfW <- 2*(nlevels(participantlabels)*(nlevels(grouplabelsA)*nlevels(grouplabelsB)-1))
+    
+    SSBet <- SST - SSW  # between subjects SS - not actually used
+    SSM <- 0
+    for (a in 1:nlevels(grouplabelsA)){
+      for (b in 1:nlevels(grouplabelsB)){
+        i <- as.numeric(((grouplabelsA==grouplabelsA[a])))
+        j <- as.numeric(((grouplabelsB==grouplabelsB[b])))
+        indices <- which((i*j)>0)
+        SSM <- SSM + (nlevels(participantlabels)*sum(abs(datavals[indices] - grandmean)^2))
+      }
+    }
+    dfM <- 2*((nlevels(grouplabelsA)*nlevels(grouplabelsB))-1)
+    
+    SSR <- 0
+    for (a in 1:nlevels(grouplabelsA)){
+      for (b in 1:nlevels(grouplabelsB)){
+        i <- as.numeric(((grouplabelsA==grouplabelsA[a])))
+        j <- as.numeric(((grouplabelsB==grouplabelsB[b])))
+        indices <- which((i*j)>0)
+        condvar <- sum(abs(datavals[indices] - mean(datavals[indices]))^2)/(length(indices)-1)
+        SSR <- SSR + (nlevels(participantlabels)-1)*condvar
+      }
+    }    
+    dfR <- 2*(nlevels(participantlabels)-1)*(nlevels(grouplabelsA)*nlevels(grouplabelsB))
+    
+    groupmeansA <- NULL
+    for (n in 1:nlevels(grouplabelsA)){groupmeansA[n] <- mean(datavals[which(grouplabelsA==factorlistA[n])])}
+    SSA <- 0
+    for (n in 1:nlevels(grouplabelsA)){SSA <- SSA + length(which(grouplabelsA==factorlistA[n]))*abs(groupmeansA[n]-grandmean)^2}
+    dfA <- 2*(nlevels(grouplabelsA)-1)
+    
+    groupmeansB <- NULL
+    for (n in 1:nlevels(grouplabelsB)){groupmeansB[n] <- mean(datavals[which(grouplabelsB==factorlistB[n])])}
+    SSB <- 0
+    for (n in 1:nlevels(grouplabelsB)){SSB <- SSB + length(which(grouplabelsB==factorlistB[n]))*abs(groupmeansB[n]-grandmean)^2}
+    dfB <- 2*(nlevels(grouplabelsB)-1)
+    
+    SSAB <- SSW - (SSA + SSB)
+    dfAB <- 2 * (nlevels(grouplabelsA)-1) * (nlevels(grouplabelsB)-1)
+    
+    MSA <- SSA/dfA
+    MSB <- SSB/dfB
+    MSAB <- SSAB/dfAB
+    MSR <- SSR/dfR
+    
+    FratioA <- MSA/MSR
+    pvalA <- pf(FratioA,df1=dfA,df2=dfR,lower.tail=FALSE)
+    FratioB <- MSB/MSR
+    pvalB <- pf(FratioB,df1=dfB,df2=dfR,lower.tail=FALSE)
+    FratioAB <- MSAB/MSR
+    pvalAB <- pf(FratioAB,df1=dfAB,df2=dfR,lower.tail=FALSE)
+    
+    method <- 'Factorial repeated measures ANOVA^2-circ'
+    output <- data.frame(FratioA,pvalA,FratioB,pvalB,FratioAB,pvalAB,dfA,dfB,dfAB,dfR,method)
+  
+  return(output)
+}
+
+
 colpal <- c('#FE5000','#8783CF','#228B22','#808080','#6d008b','#8B8000')
 targetelectrodes <- c('Oz','POz','O1','O2')
 
@@ -83,63 +164,118 @@ nbootstraps <- 1000
 
 
 # Introduction
+
+---------------------------------
+OK, some pointers for the introduction:
+
+I think we need to draw a distinction between binocular summation at threshold (on which there is a big literature) and binocular facilitation above threshold. Much of the introduction is focussed on threshold measures, but actually I think our focus here is more about suprathreshold conditions where we usually see little facilitation. I think it will help the reader if we use the term summation only to refer to threshold phenomena, and facilitation in the more general case (I've tried to do this elsewhere in the paper).
+
+The key points should be:
+
+1. For grating stimuli, there are summation effects at threshold, but these are lost at high contrasts.
+
+2. Binocular combination happens in multiple pathways, including the pupil pathway. (This is a good place to mention the Quaia paper).
+
+3. We don't know much about the pupil response, though it is clearly binocular because of the consensual response (convergence and divergence seem to be other ways of saying the same thing, so not sure they are worth mentioning).
+
+4. Actually there's not much work on temporal binocular combination even in the primary visual pathway.
+
+5. We have developed a novel paradigm that allows us to probe both cortical and subcortical pathways simultaneously for flickering light.
+
+I wouldn't say too much about models, or about the matching experiment, at this stage.
+---------------------------------
+
 Binocular combination provides a higher visual sensitivity than monocular viewing. This superiority is known as binocular summation and is defined by the binocular summation ratio (BSR), which was originally believed to be around $\sqrt{2}$ ($\approx1.4$) for grating stimuli at detection threshold [@Campbell1965]. In other words, a monocular stimulus can elicit the same response as a binocular stimulus if it has a contrast that is 1.4 times higher. This led Legge to develop a widely accepted explanation that used quadratic summation to describe binocular combination [@Legge1984]: monocular signals from the right (R) and the left (L) eyes are squared before being summed together and the binocular response (B) is given by the square root of the output (B = $\sqrt{R^2 + L^2}$, when R and L are equal to 1, the output is $\sqrt{2}$). However, subsequent research has shown that these explanations are not fully adequate to account for binocular summation. Both of these accounts constitute single channel models, and this type of model has been shown to not being able to account for contrast detection in the presence of noise [@Anderson1989]. Moreover, more recent research has shown that the summation ratio can vary greatly between $\sqrt{2}$ and 2 depending on factors such as the spatial and temporal frequency of a stimulus or the sensitivity difference between the eyes [@Baker2018]. These observations led to the development of multistage gain control models, which combine binocular summation and interocular suppression, and can account for contrast matching, detection and discrimination for spatial contrast [@Ding2006; @Meese2006].
 
 In general, it seems that the mechanisms behind binocular combination have been thoroughly studied, as have been the anatomical pathways behind it: light enters the eye though the pupil and signals are sent from the left and right retinae to the primary visual cortex, remaining anatomically isolated while passing through the lateral geniculate nucleus (LGN) until they reach V1, where they are binocularly combined [@Purves2008]. However, there is an eye component that is often underestimated in its role to determine the quality of visual information: the pupil. The pupils are openings found in the centre of the eyes that appear to be black and allow light to enter the eyes. Their size determines how much light will reach the retina and it is usually determined by the ambient levels of light: in brightness the pupils will constrict and in darkness they will dilate. This is known as the pupillary light response (PLR). The anatomical pathways that regulate this response are well understood and are very clearly and extensively described in the literature [@Angee2021; @Mathot2018; @McDougal2010; @Wang2015]. However, they are anatomically distinct from the LGN-V1 pathway meaning that binocular combination occurs separately in anatomically distinct pathways. Given this, not much is known about the computational processes behind the PLR except for some evidence of binocular interaction. The presence of a consensual response in one eye when the other is being stimulated, and the presence of convergence (one pupil responds to illumination in either retina) and divergence (both pupils respond to illumination of one retina) [@Wyatt1981] are evidence of this binocular interaction.
 
 With this in mind we designed an experiment that simultaneously recorded electrophysiological and pupillometric responses to investigate the combination of flickering light signals in both the visual cortex and the pupils. The results should offer new insight about basic neural circuits and information on how they might be affected in clinical disorders of vision (e.g. amblyopia). Based on previous literature, we expected to find a non-linear combination of the responses in visual cortex, as described by the gain control mechanisms, and a more linear combination of the responses and a greater binocular response at the level of the pupils.
 
+Several models have been developed and proposed to describe binocular combination and contrast matching results for spatial contrast. Among these, the models proposed by Ding and Sperling (2006) and Meese and colleagues (2006) are widely accepted. These models incorporate a dynamic contrast gain control, which allows to develop a model that combines binocular summation and interocular suppression The first model is a multistage model that consists of two pairs of gain control mechanisms that inhibit each other [@Ding2006]. In the earlier stage, the right and left eye channels exert gain control on the other channel. Then, they exert gain control on the other channel’s gain control. Lastly, the outputs from each channel are summed binocularly to determine the binocular signal’s magnitude. The second model is similar as it also incorporates gain control mechanisms [@Meese2006]. In the first stage, it is applied to the left and right eye channels with suppression from the other eye. Then the signal from the two eyes is summed binocularly and gain control is applied a second time. This second model in particular is interesting and relevant as it was designed to also explain data from matching experiments.
+
 To follow up on the results that we obtained, we decided to perform a contrast matching experiment to investigate whether perception of flickering light is consistent with the results observed in the cortical pathways (visual cortex) or the subcortical pathways (pupils). Matching is a paradigm in which the perceived brightness of a standard stimulus is matched to that of a target stimulus. In the latter, the interocular ratios of luminance are varied to obtain an equibrightness curve. Previous literature has used this paradigm to investigate the binocular fusion of static stimuli and the temporal combination of spatial flickering of spatial increments (a bright target on a dark background) and decrements (a dark target on a bright background) [@Anstis1998; @Levelt1965]. For spatial increments, it was found that binocular fusion seems to follow approximately linear combination rules. This means that, for a monocular stimulus to elicit the same response as a binocular stimulus, the former needs to have twice the signal of the latter. On the other hand, spatial decrements follow a winner-takes-all pattern. This means that the observer is seeing what the eye that is receiving the strongest signal is seeing.
 
-Our experiment used different stimuli than the ones used by Anstis and Ho: in the binocular fusion experiment, their stimuli were not flickering and, in the flicker experiment, they were always shown in both eyes. In our experiment, in some conditions, the flicker was shown to only one eye. Moreover, they were looking at the temporal fusion of the flicker while we focussed on the binocular fusion of the flicker. Based on this and on the results from our first experiment, we expected to find a near linear summation of the responses.
-
+Our experiment used different stimuli than the ones used by @Anstis1998: in the binocular fusion experiment, their stimuli were not flickering and, in the flicker experiment, they were always shown in both eyes. In our experiment, in some conditions, the flicker was shown to only one eye. Moreover, they were looking at the temporal fusion of the flicker while we focussed on the binocular fusion of the flicker. Based on this and on the results from our first experiment, we expected to find a near linear summation of the responses.
 
 # Methods
-## Participants
-Thirty, twelve and ten participants were recruited for experiment 1, 2 and 3 respectively. All participants had normal or corrected to normal binocular vision. All participants gave written informed consent.
 
-## Apparatus & Stimuli
-The stimuli were two discs of flickering light with a diameter of 3.74 degrees, presented on a black background. The same stimuli were used for all three experiments. Four dark red lines were added around both discs to help with their fusion into one binocular disc (see insert in figure \@ref(fig:pupildata)a for an example of the of the fused stimuli). The discs were viewed through a four-mirror stereoscope, which used front silvered mirrors and so did not suffer from internal reflections, and allowed participants to see only one fused disc. The use of a stereoscope allowed us to display the stimuli in three different ocular configurations: monocular, binocular, and dichoptic.
+## Participants
+
+Thirty, twelve and ten participants were recruited for Experiments 1, 2 and 3 respectively. All participants had normal or corrected to normal binocular vision, and gave written informed consent.
+
+## Apparatus & stimuli
+
+The stimuli were two discs of flickering light with a diameter of 3.74 degrees, presented on a black background. The same stimuli were used for all three experiments. Four dark red lines were added around both discs to help with their fusion into one binocular disc (see insert in Figure \@ref(fig:pupildata)b for an example of the fused stimulus). The discs were viewed through a four-mirror stereoscope, which used front silvered mirrors to avoid internal reflections, and meant that participants saw a single fused disc. The use of a stereoscope allowed us to modulate the stimuli in three different ocular configurations: monocular, binocular, and dichoptic. Note that during monocular presentation of flicker, the unstimulated eye still saw the static (non-flickering) disc of mean luminance.
 
 All stimuli were displayed at a mean luminance of 42 cd/m$^2$ on an Iiyama Vision Master™ Pro 510 display (800 x 600 pixels, 60 Hz refresh rate), which was gamma corrected using a Minolta LS-110 (Minolta Camera Co. Ltd., Japan). For experiments 1 and 2, the stimuli were presented using Psychopy (v3.0.7). For experiment 3, the stimuli were presented using Psychopy (v2022.1.1).
 
-EEG data were collected for experiments 1 and 2 sampled at 1 kHz using a 64-electrode ANT WaveGuard cap and the signals were recorded using the ASA software (ANT Neuro, Hengelo, NL, United States). Pupillometry data were collected only for experiment 1 using a binocular Pupil Core eye-tracker (Pupil Labs GmbH, @Kassner2014) running at 120 Hz and the signals were recorded with the Pupil Capture software (Pupil Labs GmbH, @Kassner2014).
+EEG data were collected for Experiments 1 and 2 using a 64-electrode ANT WaveGuard cap and the signals were recorded at 1 kHz using the ASA software (ANT Neuro, Netherlands). Pupillometry data were collected for Experiment 1 using a binocular Pupil Core eye-tracker (Pupil Labs GmbH, Berlin, Germany; @Kassner2014) running at 120 Hz, and the signals were recorded with the Pupil Capture software.
 
 ## Procedure
+
 Before each experiment, participants calibrated the stereoscope by adjusting the angle of the mirrors. This was done so that they would perceive the two discs as one fused disc when looking at the screen through the stereoscope.
 
-### Experiment 1
-The experiment was conducted in a windowless room, in which the only light source was the monitor. The participants sat at 99 cm from the monitor and their viewing distance through the stereoscope was 107 cm. The experiment was carried out in one session lasting 45 minutes in total, divided in three blocks of 15 minutes each. In each block, there were 60 trials in total lasting 15 seconds each (12s of stimulus presentation, with an interstimulus interval of 3s). The participants had no task and were asked to look at the fixation crosses in the middle of the two discs while trying to minimise their blinking during the presentation period. The discs flickered in counterphase at 2 Hz, but in some conditions (cross-frequency conditions) one of the two discs flickered at 1.6 Hz. They were set at five temporal contrast levels relative to the mean luminance: 6, 12, 24, 48 and 96 \%.
+### Experiment 1: simultaneous EEG and pupillometry
 
-As already stated, the mirror stereoscope allowed the use of three different ocular configurations. In the monocular configuration, one disc was set to flicker either at 2 Hz or 1.6 Hz for each contrast level, while the other disc remained stable at a constant mean luminance. In the binocular configuration, both discs flickered at the same contrast level with both discs flickering at 2 Hz in the same-frequency condition, while, in the cross-frequency condition, one disc flickered at 2 Hz and the other at 1.6 Hz. Finally, in the dichoptic configuration, one disc flickered across all contrast levels and the other flickered at a fixed contrast level that was set at 48 \%. Similar to the binocular configuration, the dichoptic configuration was divided in same-frequency and cross-frequency conditions.
+The experiment was conducted in a windowless room, in which the only light source was the monitor. The participants sat at 99 cm from the monitor and the total optical viewing distance (through the stereoscope) was 107 cm. The experiment was carried out in one session lasting 45 minutes in total, divided in three blocks of 15 minutes each. In each block, there were 60 trials in total lasting 15 seconds each (12s of stimulus presentation, with an interstimulus interval of 3s). The participants were given no specific task instructions, but were asked to look at the fixation crosses in the middle of the two discs while trying to minimise their blinking during the presentation period. 
+We included six distinct ocular conditions, each at five temporal target contrast levels (combined factorially) relative to the mean luminance: 6, 12, 24, 48 and 96\%. In the first three conditions, the discs flickered at 2 Hz, in either a monocular, binocular, or dichoptic arrangement. In the dichoptic condition the non-target eye saw a fixed luminance contrast of 48\%. In the remaining three conditions (termed the cross-frequency conditions) one eye's disc flickered at 1.6Hz, and the other eye's disc flickered at 2Hz. We also tested monocular (one eye sees 1.6Hz flicker, the other sees mean luminance), binocular (one eye sees each frequency at the target contrast) and dichoptic (target stimulus flickering at 2Hz, mask contrast of 48\% at 1.6Hz in the other eye) arrangements. The rationale for flickering both eyes at 2Hz is that we can then measure summation behaviour between the eyes in the pupil and EEG response at 2Hz. The rationale for flickering the eyes at different frequencies is that this permits measurement of suppression between the eyes (i.e. the reduction in the 2Hz response when a 1.6Hz mask component is added to the other eye). We counterbalanced presentation of the target stimulus across the left and right eyes.
 
-### Experiment 2
-The conditions were similar to experiment 1 (windowless room and viewing distance of 107 cm). Like in experiment 1, participants had no specific task other than looking at the fixation crosses and minimising their blinking. Unlike the first experiment, only one contrast level was used (96 \%) and the discs were set to flicker at five different frequencies (2, 4, 8, 16 and 30 Hz). Only two ocular configurations, monocular and binocular, were used, with the latter having both discs flickering at the same frequency.
+### Experiment 2: EEG responses across temporal frequency
 
-The experiment was carried out in one session lasting 25 minutes in total, divided in five blocks of 5 minutes each. In each block, there were 20 trials in total lasting 15 seconds each (12s of stimulus presentation and 3s of interstimulus interval).
+This experiment used the same equipment set up as Experiment 1, except that the eye tracker was not used. Unlike the first experiment, only one contrast level was used (96\%) and the discs were set to flicker at five different frequencies (2, 4, 8, 16 and 30 Hz). Only two ocular configurations, monocular and binocular, were used, with the latter having both discs flickering at the same frequency. The experiment was carried out in one session lasting 25 minutes in total, divided into five blocks of 5 minutes each. In each block, there were 20 trials in total with the same timing as for Experiment 1.
 
-### Experiment 3
-The experiment was conducted in a room with a blacked-out window. The sitting and viewing distances of the participants were similar to the two previous experiments. As this was a psychophysical task, no EEG or pupillometry data were collected for this experiment.
+### Experiment 3: temporal contrast matching
 
-A two-interval forced-choice staircase procedure was used to collect data. In one interval, participants were presented with a standard fused disc that flickered at a set contrast level (either 24 or 48 \%), which was selected by the experimenter at the beginning of each block. In a separate interval, a target fused disc flickering at varying contrast levels was displayed. The contrast level of the target was controlled by a 1-up, 1-down staircase moving in logarithmic (dB) steps of contrast. The ratio of flicker amplitudes in the left and right eyes was varied across blocks and was set to be 0, 0.25, 0.5, 0.75 or 1. The standard and the target fused discs were displayed for 1 second each, with an interstimulus interval of 0.5 seconds. After the discs appeared on screen, the participants had to indicate which interval they perceived as having the more intense flicker. The intervals were randomly ordered, and all discs flickered at a frequency of 2 Hz.
+The experiment was conducted in a darkened room with a blacked-out window. The display equipment (monitor and stereoscope) were the same as for the two previous experiments, but no EEG or pupillometry data were collected. A two-interval contrast matching procedure was used to collect data. In one interval, participants were presented with a standard fused disc that flickered at a set contrast level (either 24 or 48\%), which was selected by the experimenter at the beginning of each block. In the other interval, a target disc flickering at varying contrast levels was displayed. The contrast level of the target was controlled by a 1-up, 1-down staircase moving in logarithmic (dB) steps of contrast. The ratio of flicker amplitudes in the left and right eyes was varied across blocks and was set to be 0, 0.25, 0.5, 0.75 or 1 (9 distinct conditions). The standard and target discs were displayed for 1 second each, with an interstimulus interval of 0.5 seconds. After the discs appeared on screen, the participants had to indicate which interval they perceived as having the more intense flicker. The intervals were randomly ordered, and all discs flickered at a frequency of 2 Hz (two cycles in sine phase).
 
-Due to its long duration (162 minutes in total), the participants completed the experiment across multiple sessions divided at their own discretion. The experiment was divided in 54 blocks (3 repetitions $\times$ 2 standard contrasts $\times$ 9 target ratios), which lasted on average 3 minutes each (depending on the response speed of the participant). In each block, there were a total of 50 trials. We pooled the data from all repetitions of a given condition and fitted a cumulative normal psychometric function to estimate the point of subjective equality at the 50 \% point.
+Due to its long duration (approximately 3 hours in total), the participants completed the experiment across multiple sessions initiated at their own convenience The experiment was divided into 54 blocks (3 repetitions $\times$ 2 standard contrasts $\times$ 9 target ratios), which lasted on average 3 minutes each, depending on the response speed of the participant. In each block, there were a total of 50 trials. No auditory feedback was given for this subjective task.
 
 ## Data analysis
-EEG data were converted from the ANT-EEProbe format to a compressed csv text file using a custom Matlab script and components of the EEGlab toolbox [@Delorme2004]. The data for each participant were then loaded into R for analysis where a ten-second waveform for each trial at each electrode was extracted. Fourier transform was calculated for each waveform, and the spectrum stored in a matrix. All repetitions of each condition were then averaged for each electrode. They were then averaged across the four occipital electrodes (POz, Oz, O1, O2), to obtain individual results. Finally, these were averaged across all participants to obtain the final results.
 
-A similar process was adopted for the analysis of the pupillometry data. The data were converted from the mp4 format to a  csv text file using the Pupil Player software [@Kassner2014]. The individual data were then loaded into R for analysis where a twelve-second waveform for each trial in each eye was extracted. Fourier transform was calculated for each waveform, and the spectrum stored in a matrix. All repetitions of each condition were then averaged for each eye. They were then averaged across the two eyes, to obtain individual results. Finally, these were averaged across all participants to obtain the final results.
+EEG data were converted from the ANT-EEProbe format to a compressed csv text file using a custom Matlab script and components of the EEGlab toolbox [@Delorme2004]. The data for each participant were then loaded into R for analysis where a ten-second waveform for each trial at each electrode was extracted (omitting the first two seconds). The fast Fourier transform was calculated for each waveform, and the spectrum stored in a matrix. All repetitions of each condition were then averaged for each electrode. They were then averaged across four occipital electrodes (\emph{POz}, \emph{Oz}, \emph{O1}, \emph{O2}), to obtain individual results. Finally, these were averaged across participants to obtain the group results. All averaging retained the phase information (i.e. coherent averaging), and at each stage we excluded data points with a Mahalanobis distance exceeding $D$ = `r SDthresh` from the complex-valued mean [see @Baker2021]. For statistical comparisons of complex-valued data, we use the $ANOVA^2_{circ}$ statistic described by @Baker2021. This is a multivariate extension of ANOVA that assumes equal variance of the real and imaginary Fourier components, or equivalently, an extension of the $T^2_{circ}$ statistic of @Victor1991 that can compare more than two conditions.
 
+A similar analysis pipeline was adopted for the pupillometry data. The data were converted from mp4 videos to a csv text file using the Pupil Player software [@Kassner2014], which estimated pupil diameter for each eye on each frame using a 3D model of the eyeball. The individual data were then loaded into R for analysis, where again a ten-second waveform for each trial in each eye was extracted (excluding the first two seconds after stimulus onset). We interpolated across any dropped or missing frames to ensure regular and continuous sampling over time. The fast Fourier transform was calculated for each waveform, and all repetitions of each condition were pooled across eye and then averaged. Finally, data were averaged across all participants to obtain the group results. Again, we used coherent averaging, and excluded outlying data points in the same way as for the EEG data. Note that previous pupillometry studies using luminance flicker have tended to fit sine-waves to the data, rather than using Fourier analysis [e.g. @Spitschan2014]. Our novel approach is more robust to noise at other frequencies, and makes the pupillometry analysis consistent with standard practice in steady-state EEG analysis [e.g. @Figueira2022]
+
+To analyse the matching data, we pooled the trial responses across all repetitions of a given condition for each participant. We then fitted a cumulative normal psychometric function to estimate the point of subjective equality at the 50\% level. Thresholds were averaged across participants in logarithmic (dB) units. For all experiments, we used a bootstrapping procedure with `r nbootstraps` iterations to estimate standard errors across participants. All analysis and figure construction was conducted using a single R-script, available online, making this study fully computationally reproducible.
+
+## Computational model and parameter estimation
+
+To describe our data, we chose a model of binocular contrast gain control with the same general form as the first stage of the model proposed by @Meese2006. The second gain control stage was omitted [consistent with @Baker2017] to simplify the model and reduce the number of free parameters. The response of the left eye's channel is given by:
+
+\begin{equation}
+\label{eq:respL}
+Resp_L = \frac{L^2}{Z + L + wR},
+\end{equation}
+
+with an equivalent expression for the right eye:
+
+\begin{equation}
+\label{eq:respR}
+Resp_R = \frac{R^2}{Z + R + wL}.
+\end{equation}
+
+In both equations, _L_ and _R_ are the contrast signals from the left and right eyes, _Z_ is a saturation constant that shifts the contrast-response function laterally, and _w_ is the weight of suppression from the other eye.
+
+The responses from the two eyes are then summed binocularly:
+
+\begin{equation}
+\label{eq:respB}
+Resp_B = R_{max}(Resp_L + Resp_R) + n,
+\end{equation}
+
+where _n_ is a noise parameter, and $R_{max}$ scales the overall response amplitude. The $R_{max}$ parameter was omitted when modelling the contrast matching data, as it had no effect in this paradigm.
+
+Despite being derived from the model proposed by @Meese2006, the simplifications applied to this architecture make it very similar to other models [e.g. @Ding2006; @Legge1984; @Schrodinger1926]. In particular we fixed the numerator exponent at 2 in our model, because otherwise this value tends to trade off with the weight of interocular suppression [see @Baker2012; @Kingdom2015]. Our key parameter of interest is the weight of interocular suppression. Large values around $w$ = 1 result in a very small or nonexistent binocular advantage at suprathreshold contrasts, consistent with previous work using grating stimuli [@Baker2017]. Low values around $w$ = 0 produce substantial, near-linear binocular facilitation [@Baker2020].
+
+We implemented the model within a Bayesian framework using the Stan software [@Carpenter2017]. This allowed us to estimate group-level posterior parameter distributions for the weight of interocular suppression, $w$, and the other free model parameters $R_{max}$, $Z$ and $n$. The prior distributions for all parameters were Gaussian, with means and standard deviations of 1 and 0.5 for $w$ and $R_{max}$, and 5 and 2 for $Z$ and $n$. We sampled from a Student's t-distribution for the amplitudes in the pupillometry and EEG experiments, and from a Bernoulli distribution for the single trial matching data. The models were fit using the individual data across all participants, independently for each data set. Because we used coherent averaging across participants, the group average amplitudes are shifted vertically relative to the model predictions, which are based on hierarchical fits to the individual participant amplitudes (put another way, the model does not implement coherent averaging). However it is clear that the character of the model in all cases gives a good representation of the data. We sampled over a million steps for each data set, using a computer cluster, and retained 10\% of samples for plotting.
+
+## Preregistration, data and code availability
+
+We initially preregistered our main hypotheses and analysis intentions for the first experiment. We then conducted a pilot study with N=12 participants, before making some minor changes to the stimulus (we added dim red lines to aid binocular fusion). We then ran the main experiment, followed by two additional experiments that were not preregistered. The preregistration document, raw data files, and experimental and analysis code, are available on the project repository: https://osf.io/tbema/.
 
 # Results
+
 ## Experiment 1
-The results from the first experiment are shown in figure \@ref(fig:pupildata) and figure \@ref(fig:EEGdata). Each curve is showing the amplitude of the signal for the three different configurations (monocular, binocular and dichoptic).
-
-Figure \@ref(fig:pupildata) is showing the results for the pupillometry. Figure \@ref(fig:pupildata)a is showing the group average waveform for binocular presentation. Figure \@ref(fig:pupildata)b is showing the average Fourier spectrum, where we can observe a spike at 2 Hz, which shows a very clear, non-noisy response to the flickering stimuli. Figures \@ref(fig:pupildata)c-e show the contrast response functions (CRFs) at 2 and 1.6 Hz. In the same-frequency condition at 2 Hz (fig. \@ref(fig:pupildata)c), the amplitude of the binocular configuration is bigger than the amplitude of the monocular configuration. In general, we observe that the binocular to monocular ratio is roughly $\sqrt2$ at each contrast level (fig. ).
-In the cross-frequency condtion at 2 Hz (fig. \@ref(fig:pupildata)d), no summation is observed since the amplitudes of the binocular and dichoptic conditions are smaller than the amplitude of the monocular condition. Interestingly, we observe a relatively small cross-frequency facilitation at 1.6 Hz (fig. \@ref(fig:pupildata)e), with the binocular amplitude being bigger than the monocular amplitude, especially at the lower contrast levels. This facilitation is then lost at the highest contrast level, where the amplitude of the monocular signal is equal to the amplitude of the binocular signal. This pattern of results in the cross-frequency conditions suggests the presence of interocular suppression at the level of the pupils. Moreover, the low summation observed in the same-frequency condition suggests that theprocessing of temporal luminance modulations happens in a non-linear way at the level of the pupils.
-
-Figure \@ref(fig:EEGdata) shows the results for EEG. Figure \@ref(fig:EEGdata)a is showing the group average waveform for binocular presentation. Figure \@ref(fig:EEGdata)b is showing the average Fourier spectrum, where we can observe two spikes at 2 and 4 Hz, which show a very clear, non-noisy response to the flickering stimuli at the first and second harmonics. Figures \@ref(fig:EEGdata)c-e show the CRFs at 2 and 1.6 Hz at the first harmonic, and figures \@ref(fig:EEGdata)f-h show the CRFs at the second harmonic. 
-What is immediately apparent is that, in the same-frequency condition, the binocular responses at the first (fig. \@ref(fig:EEGdata)c) and second (fig. \@ref(fig:EEGdata)f) harmonics are showing very high summation of binocular signals compared to the pupillometry. The amplitudes of the binocular responses are twice, and even more than twice, the amplitudes of the monocular responses. This is especially clear at the highest contrasts. This is clearly displayed in figure, which is showing the binocular to monocular ratios for the EEG at both harmonics and the pupillometry. For the cross-frequency condition at 2 Hz and 4 Hz (fig. \@ref(fig:EEGdata)d and \@ref(fig:EEGdata)g), there is almost no summation, with the amplitudes of the binocular and dichoptic configurations being equal, and even smaller, than the amplitudes of the monocular signals. This pattern is also observable in the cross-frequency condition at 1.6 (fig. \@ref(fig:EEGdata)e) and 3.2 Hz (fig. \@ref(fig:EEGdata)h). This pattern of results seems to suggest that processing of temporal luminance modulations happens in a  linear way in the visual cortex. Moreover, the lower amplitudes for the binocular and the dichoptic configurations in the cross-frequency conditions seem to indicate the presence of interocular suppression in the visual cortex. 
 
 ```{r include=FALSE, results='hide'}
 
@@ -629,10 +765,6 @@ save(file=paste0(datadir,'Averagedata.RData'),list=c('cleanmeansP','cleanmeansPC
 
 # generate plot showing the group pupillometry data
 
-if (processdata > 0){
-
-contrastsdB <- 20*log10(c(6,12,24,48,96))
-
          if (!file.exists(paste0(datadir,'Averagedata.RData'))){
            # download it from OSF
            if (!exists('osffilesP')){
@@ -644,7 +776,11 @@ contrastsdB <- 20*log10(c(6,12,24,48,96))
          }
 
 load(file=paste0(datadir,'Averagedata.RData'))
-  
+
+if (processdata > 0){
+
+contrastsdB <- 20*log10(c(6,12,24,48,96))
+
 plotlims <- c(15,40,0,0.03) 
 ticklocsx <- contrastsdB    # locations of tick marks on x axis
 ticklocsy <- seq(0,0.03,0.01)    # locations of tick marks on y axis
@@ -784,6 +920,17 @@ text(-0.7,0.4,'(a)',adj=0.5,cex=2.5)
 
 dev.off()
 
+         if (!file.exists(paste0(localdir,'StimulusExample.png'))){
+           # download it from OSF
+           if (!exists('osffiles')){
+           osfnode <- 'tbema'
+           osfproject <- osf_retrieve_node(osfnode)
+          osffiles <- osf_ls_files(osfproject,n_max=300)}
+          fid <- which(osffiles$name=='StimulusExample.png')
+          osf_download(osffiles[fid,],localdir,progress=TRUE)
+         } 
+
+stim <- readPNG('local/StimulusExample.png')
 
   PostScriptTrace('CRF1p.ps')
   p1 <- readPicture('CRF1p.ps.xml')
@@ -811,6 +958,12 @@ dev.off()
   par(mar=c(0.1,0.1,0.1,0.1))
   plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=c(0,1), ylim=c(0,1))
   
+  aspratio <- 10/15  # this is the aspect ratio of the output pdf
+  imwidth <- 0.2
+  xstart <- 0.85
+  ystart <- 0.72
+  rasterImage(stim,xstart,ystart,xstart+imwidth*aspratio,ystart+imwidth) 
+  
   grid.picture(p1,x=0.17,y=0.25,width=0.32,height=1)
   grid.picture(p2,x=0.5,y=0.25,width=0.32,height=1)
   grid.picture(p3,x=0.83,y=0.25,width=0.32,height=1)
@@ -828,19 +981,163 @@ dev.off()
 
 ```
 
-```{r pupildata, fig.cap="Summary of pupillometry results for N=30 participants. Panel (a) shows a group average waveform for binocular presentation (low pass filtered at 5Hz), with the driving signal plotted at the foot. Panel (b) shows the average Fourier spectrum. Panels (c,d) show contrast response functions at 2Hz for different conditions. Panel (e) shows contrast response functions at 1.6Hz for three conditions. Shaded regions and error bars indicate bootstrapped standard errors.", fig.align="center", echo=FALSE}
+```{r include=FALSE, results='hide'}
+
+# do statistics on the pupillometry data
+
+alldata <- NULL
+groupID <- NULL
+allP <- NULL
+counter <- 0
+for (cont in 1:dim(allmeansP)[3]){
+  for (p in 1:dim(allmeansP)[1]){
+    counter <- counter + 1
+    alldata[counter] <- allmeansP[p,3,cont]
+    groupID[counter] <- cont
+    allP[counter] <- p
+  }
+}
+dichA2c <- anovacirc.test(alldata,group=groupID,participant=allP)
+# groupID <- as.factor(groupID)
+# participantID <- as.factor(participantID)
+# adata <- data.frame(dichdata,groupID,participantID)
+# dichA2c <- ezANOVA(data = adata, dv = dichdata, within=groupID, wid=participantID)
+
+
+alldata <- NULL
+allgroupA <- NULL
+allgroupB <- NULL
+allP <- NULL
+counter <- 0
+for (p in 1:30){
+  for (lev in 1:5){
+    for (cond in 1:2){
+    counter <- counter + 1
+    alldata[counter] <- allmeansP[p,cond,lev]
+    allgroupA[counter] <- lev
+    allgroupB[counter] <- cond
+    allP[counter] <- p
+    }
+  }
+}
+monbinPstats <- anovacirc2way(alldata,allgroupA,allgroupB,allP)
+# allgroupA <- as.factor(allgroupA)
+# allgroupB <- as.factor(allgroupB)
+# allP <- as.factor(allP)
+# alldata <- abs(alldata)
+# adata <- data.frame(alldata,allgroupA,allgroupB,allP)
+# monbinPstats <- ezANOVA(data = adata, dv = alldata, within=c(allgroupA,allgroupB), wid=allP)
+
+
+alldata <- NULL
+allgroupA <- NULL
+allgroupB <- NULL
+allP <- NULL
+counter <- 0
+for (p in 1:30){
+  for (lev in 1:5){
+    counter <- counter + 1
+    alldata[counter] <- allmeansP[p,1,lev]
+    allgroupA[counter] <- lev
+    allgroupB[counter] <- 1
+    allP[counter] <- p
+
+    counter <- counter + 1
+    alldata[counter] <- allmeansP[p,3,lev]
+    allgroupA[counter] <- lev
+    allgroupB[counter] <- 2
+    allP[counter] <- p
+  }
+}
+mondichPstats <- anovacirc2way(alldata,allgroupA,allgroupB,allP)
+# allgroupA <- as.factor(allgroupA)
+# allgroupB <- as.factor(allgroupB)
+# allP <- as.factor(allP)
+# alldata <- abs(alldata)
+# adata <- data.frame(alldata,allgroupA,allgroupB,allP)
+# mondichPstats <- ezANOVA(data = adata, dv = alldata, within=c(allgroupA,allgroupB), wid=allP)
+
+
+alldata <- NULL
+allgroupA <- NULL
+allgroupB <- NULL
+allP <- NULL
+counter <- 0
+for (p in 1:30){
+  for (lev in 1:5){
+    counter <- counter + 1
+    alldata[counter] <- allmeansP[p,1,lev]
+    allgroupA[counter] <- lev
+    allgroupB[counter] <- 1
+    allP[counter] <- p
+
+    counter <- counter + 1
+    alldata[counter] <- allmeansP[p,5,lev]
+    allgroupA[counter] <- lev
+    allgroupB[counter] <- 2
+    allP[counter] <- p
+  }
+}
+
+monbinPstatsX <- anovacirc2way(alldata,allgroupA,allgroupB,allP)
+# allgroupA <- as.factor(allgroupA)
+# allgroupB <- as.factor(allgroupB)
+# allP <- as.factor(allP)
+# alldata <- abs(alldata)
+# adata <- data.frame(alldata,allgroupA,allgroupB,allP)
+# monbinPstatsX <- ezANOVA(data = adata, dv = alldata, within=c(allgroupA,allgroupB), wid=allP)
+
+alldata <- NULL
+allgroupA <- NULL
+allgroupB <- NULL
+allP <- NULL
+counter <- 0
+for (p in 1:30){
+  for (lev in 1:5){
+    counter <- counter + 1
+    alldata[counter] <- allmeansP[p,1,lev]
+    allgroupA[counter] <- lev
+    allgroupB[counter] <- 1
+    allP[counter] <- p
+
+    counter <- counter + 1
+    alldata[counter] <- allmeansP[p,6,lev]
+    allgroupA[counter] <- lev
+    allgroupB[counter] <- 2
+    allP[counter] <- p
+  }
+}
+
+mondichPstatsX <- anovacirc2way(alldata,allgroupA,allgroupB,allP)
+# allgroupA <- as.factor(allgroupA)
+# allgroupB <- as.factor(allgroupB)
+# allP <- as.factor(allP)
+# alldata <- abs(alldata)
+# adata <- data.frame(alldata,allgroupA,allgroupB,allP)
+# mondichPstatsX <- ezANOVA(data = adata, dv = alldata, within=c(allgroupA,allgroupB), wid=allP)
+
+```
+
+The pupillometry results are summarised in Figure \@ref(fig:pupildata). The group average waveform for binocular presentation is shown in Figure \@ref(fig:pupildata)a. There is a substantial pupil constriction at stimulus onset, followed by visible oscillations at the flicker frequency (2Hz, see waveform at foot). The average Fourier spectrum is displayed in Figure \@ref(fig:pupildata)b, and shows a substantial spike at 2 Hz, but no evidence of a second harmonic response at 4Hz. These results demonstrate that our paradigm can evoke measurable steady-state pupil responses at 2Hz.
+
+```{r pupildata, fig.cap="Summary of pupillometry results for N=30 participants. Panel (a) shows a group average waveform for binocular presentation (low pass filtered at 5Hz), with the driving signal plotted at the foot. Panel (b) shows the average Fourier spectrum, with an inset image illustrating the stimulus appearance (upper right). Panels (c,d) show contrast response functions at 2Hz for different conditions. Panel (e) shows contrast response functions at 1.6Hz for three conditions. Shaded regions and error bars indicate bootstrapped standard errors.", fig.align="center", echo=FALSE}
 
 knitr::include_graphics(paste0(figdir,'pupildata.pdf'))
 
 ```
 
+Figure \@ref(fig:pupildata)c shows contrast response functions in response to stimuli flickering only at 2Hz. Response amplitudes increased monotonically with target contrast, confirming that our paradigm is suitable for measuring contrast-dependent differences in response (to our knowledge this is the first time this has been demonstrated). The amplitude of the binocular condition (blue squares) is consistently greater than that of the monocular condition (red circles) across all target contrasts. A $2\times5$ repeated measures $ANOVA^2_{circ}$ [@Baker2021] comparing these conditions revealed a significant main effect of target contrast (F(`r monbinPstats$dfA`,`r monbinPstats$dfR`) = `r round(monbinPstats$FratioA,digits=2)`, $p$ < 0.001), a significant effect of condition (F(`r monbinPstats$dfB`,`r monbinPstats$dfR`) = `r round(monbinPstats$FratioB,digits=2)`, $p$ < 0.001), and a significant interaction (F(`r monbinPstats$dfAB`,`r monbinPstats$dfR`) = `r round(monbinPstats$FratioAB,digits=2)`, $p$ < 0.001). The dichoptic condition begins at a much higher amplitude, owing to binocular combination of the target and high (48%) contrast mask, and then increases slightly with increasing target contrast (main effect of target contrast: F(`r dichA2c$dfM`,`r dichA2c$dfR`) = `r round(dichA2c$Fratio,digits=2)`, $p$ < `r round(dichA2c$pval,digits=3)`).
 
+In Figure \@ref(fig:pupildata)d, we plot responses to monocular target stimuli flickering at 2Hz, when the other eye viewed stimuli flickering at 1.6Hz (the red monocular-only data are replotted from Figure \@ref(fig:pupildata)c for comparison). When the 1.6Hz component had the same contrast as the target (the binocular cross condition, shown in purple) responses were facilitated slightly at low contrasts, and suppressed at the highest target contrasts (interaction between contrast and condition: F(`r monbinPstatsX$dfAB`,`r monbinPstatsX$dfR`) = `r round(monbinPstatsX$FratioAB,digits=2)`, $p$ < 0.001). When the 1.6Hz component had a fixed contrast of 48% (the dichoptic cross condition, shown in yellow), responses were suppressed slightly across the contrast range (interaction between contrast and condition: F(`r mondichPstatsX$dfAB`,`r mondichPstatsX$dfR`) = `r round(mondichPstatsX$FratioAB,digits=2)`, $p$ < 0.001).
+
+Figure \@ref(fig:pupildata)e shows responses at 1.6Hz, for the same conditions, as well as for a condition in which a monocular stimulus flickered at 1.6Hz (grey circles). Surprisingly there appears to be a slight facilitation effect in the binocular cross condition, particularly at lower contrasts. The dichoptic cross condition does not show clear modulation with target contrast.
+
+Figure \@ref(fig:EEGdata) shows equivalent results, measured contemporaneously using EEG. Figure \@ref(fig:EEGdata)a shows the group average waveform for binocular presentation, and Figure \@ref(fig:EEGdata)b shows the Fourier spectrum for binocular presentation, both averaged across four posterior electrodes (_Oz_, _POz_, _O1_ and _O2_, marked on the inset scalp plots). Unlike for the pupillometry data, there are clear responses at both the first harmonic frequency (2Hz), and also the second harmonic frequency (4Hz). We therefore calculated contrast response functions at both first and second harmonic frequencies.
 
 ```{r include=FALSE, results='hide'}
 
 # generate plot showing the group EEG data
 
-if (processdata > 0){
 
 contrastsdB <- 20*log10(c(6,12,24,48,96))
 
@@ -868,6 +1165,8 @@ hdata <- read.csv(paste0(datadir,'headerfile.csv'))
 load(file=paste0(datadir,'Averagedata.RData'))
 
 electrodeindices <- match(targetelectrodes,electrodes)-2
+
+if (processdata > 0){
 
 plotlims <- c(15,40,0,0.8)  
 ticklocsx <- contrastsdB    # locations of tick marks on x axis
@@ -1251,20 +1550,154 @@ dev.off()
 
 ```
 
+```{r include=FALSE, results='hide'}
+
+# do statistics on the EEG data
+
+alldata <- NULL
+groupID <- NULL
+allP <- NULL
+counter <- 0
+for (cont in 1:dim(allmeansP)[3]){
+  for (p in 1:dim(allmeansP)[1]){
+    counter <- counter + 1
+    alldata[counter] <- mean(allmeansE[p,electrodeindices,3,cont])
+    groupID[counter] <- cont
+    allP[counter] <- p
+  }
+}
+dichE2c <- anovacirc.test(alldata,group=groupID,participant=allP)
+# groupID <- as.factor(groupID)
+# participantID <- as.factor(participantID)
+# adata <- data.frame(dichdata,groupID,participantID)
+# dichE2c <- ezANOVA(data = adata, dv = dichdata, within=groupID, wid=participantID)
+
+
+alldata <- NULL
+allgroupA <- NULL
+allgroupB <- NULL
+allP <- NULL
+counter <- 0
+for (p in 1:30){
+  for (lev in 1:5){
+    for (cond in 1:2){
+    counter <- counter + 1
+    alldata[counter] <- mean(allmeansE[p,electrodeindices,cond,lev])
+    allgroupA[counter] <- lev
+    allgroupB[counter] <- cond
+    allP[counter] <- p
+    }
+  }
+}
+monbinEstats <- anovacirc2way(alldata,allgroupA,allgroupB,allP)
+# allgroupA <- as.factor(allgroupA)
+# allgroupB <- as.factor(allgroupB)
+# allP <- as.factor(allP)
+# alldata <- abs(alldata)
+# adata <- data.frame(alldata,allgroupA,allgroupB,allP)
+# monbinEstats <- ezANOVA(data = adata, dv = alldata, within=c(allgroupA,allgroupB), wid=allP)
+
+
+alldata <- NULL
+allgroupA <- NULL
+allgroupB <- NULL
+allP <- NULL
+counter <- 0
+for (p in 1:30){
+  for (lev in 1:5){
+    counter <- counter + 1
+    alldata[counter] <- mean(allmeansE[p,electrodeindices,1,lev])
+    allgroupA[counter] <- lev
+    allgroupB[counter] <- 1
+    allP[counter] <- p
+
+    counter <- counter + 1
+    alldata[counter] <- mean(allmeansE[p,electrodeindices,3,lev])
+    allgroupA[counter] <- lev
+    allgroupB[counter] <- 2
+    allP[counter] <- p
+  }
+}
+mondichEstats <- anovacirc2way(alldata,allgroupA,allgroupB,allP)
+# allgroupA <- as.factor(allgroupA)
+# allgroupB <- as.factor(allgroupB)
+# allP <- as.factor(allP)
+# alldata <- abs(alldata)
+# adata <- data.frame(alldata,allgroupA,allgroupB,allP)
+# mondichEstats <- ezANOVA(data = adata, dv = alldata, within=c(allgroupA,allgroupB), wid=allP)
+
+
+alldata <- NULL
+allgroupA <- NULL
+allgroupB <- NULL
+allP <- NULL
+counter <- 0
+for (p in 1:30){
+  for (lev in 1:5){
+    counter <- counter + 1
+    alldata[counter] <- mean(allmeansE[p,electrodeindices,1,lev])
+    allgroupA[counter] <- lev
+    allgroupB[counter] <- 1
+    allP[counter] <- p
+
+    counter <- counter + 1
+    alldata[counter] <- mean(allmeansE[p,electrodeindices,5,lev])
+    allgroupA[counter] <- lev
+    allgroupB[counter] <- 2
+    allP[counter] <- p
+  }
+}
+
+monbinEstatsX <- anovacirc2way(alldata,allgroupA,allgroupB,allP)
+# allgroupA <- as.factor(allgroupA)
+# allgroupB <- as.factor(allgroupB)
+# allP <- as.factor(allP)
+# alldata <- abs(alldata)
+# adata <- data.frame(alldata,allgroupA,allgroupB,allP)
+# monbinEstatsX <- ezANOVA(data = adata, dv = alldata, within=c(allgroupA,allgroupB), wid=allP)
+
+alldata <- NULL
+allgroupA <- NULL
+allgroupB <- NULL
+allP <- NULL
+counter <- 0
+for (p in 1:30){
+  for (lev in 1:5){
+    counter <- counter + 1
+    alldata[counter] <- mean(allmeansE[p,electrodeindices,1,lev])
+    allgroupA[counter] <- lev
+    allgroupB[counter] <- 1
+    allP[counter] <- p
+
+    counter <- counter + 1
+    alldata[counter] <- mean(allmeansE[p,electrodeindices,6,lev])
+    allgroupA[counter] <- lev
+    allgroupB[counter] <- 2
+    allP[counter] <- p
+  }
+}
+
+mondichEstatsX <- anovacirc2way(alldata,allgroupA,allgroupB,allP)
+# allgroupA <- as.factor(allgroupA)
+# allgroupB <- as.factor(allgroupB)
+# allP <- as.factor(allP)
+# alldata <- abs(alldata)
+# adata <- data.frame(alldata,allgroupA,allgroupB,allP)
+# mondichEstatsX <- ezANOVA(data = adata, dv = alldata, within=c(allgroupA,allgroupB), wid=allP)
+
+```
+
 ```{r EEGdata, fig.cap="Summary of EEG results for N=30 participants. Panel (a) shows a group average waveform for binocular presentation (low pass filtered at 5Hz), with the driving signal plotted at the foot. Panel (b) shows the average Fourier spectrum, and inset scalp distributions. Black dots on the scalp plots indicate electrodes Oz, POz, O1 and O2. Panels (c,d) show contrast response functions at 2Hz for different conditions. Panel (e) shows contrast response functions at 1.6Hz for three conditions. Panels (f-h) are in the same format but for the second harmonic responses. Shaded regions and error bars indicate bootstrapped standard errors.", fig.align="center", echo=FALSE}
 
 knitr::include_graphics(paste0(figdir,'EEGdata.pdf'))
 
 ```
 
+When stimuli in both eyes flicker at 2Hz, the binocular responses at the first (Figure \@ref(fig:EEGdata)c) and second (Figure \@ref(fig:EEGdata)f) harmonics are substantially greater than the monocular responses, particularly at high contrasts. Analysis of variance on the complex values ($ANOVA^2_{circ}$) revealed a main effect of contrast (F(`r monbinEstats$dfA`,`r monbinEstats$dfR`) = `r round(monbinEstats$FratioA,digits=2)`, $p$ < 0.001) and an interaction effect (F(`r monbinEstats$dfAB`,`r monbinEstats$dfR`) = `r round(monbinEstats$FratioAB,digits=2)`, $p$ < 0.001), but no effect of condition ($p$ = `r round(monbinEstats$pvalB,digits=2)`). For the cross-frequency conditions (Figure \@ref(fig:EEGdata)d,g), there was no appreciable effect of adding a 1.6Hz component on the response at 2Hz or 4Hz (no effect of condition, and no interaction). Similarly, there were no clear interocular interactions between frequencies in the responses at 1.6Hz (Figure \@ref(fig:EEGdata)e) and 3.2Hz (Figure \@ref(fig:EEGdata)h). This pattern of results suggests that processing of temporal luminance modulations happens in a more linear way in visual cortex (indexed by EEG), compared with subcortical pathways (indexed by pupillometry), and shows no evidence of interocular suppression.
+
 ```{r include=FALSE, results='hide'}
 
 # generate plot showing the bin:mon ratio for three data sets
-
-if (processdata > 0){
-
-contrastsdB <- 20*log10(c(6,12,24,48,96))
-electrodeindices <- match(targetelectrodes,electrodes)-2
 
          if (!file.exists(paste0(datadir,'Averagedata.RData'))){
            # download it from OSF
@@ -1278,9 +1711,48 @@ electrodeindices <- match(targetelectrodes,electrodes)-2
 
 load(file=paste0(datadir,'Averagedata.RData'))
 
+contrastsdB <- 20*log10(c(6,12,24,48,96))
+electrodeindices <- match(targetelectrodes,electrodes)-2
+
 allPratios <- 20*log10(abs(allmeansP[,2,])/abs(allmeansP[,1,]))
 allEratios <- 20*log10(abs(apply(allmeansE[,electrodeindices,2,],c(1,3),mean))/abs(apply(allmeansE[,electrodeindices,1,],c(1,3),mean)))
 allE2ratios <- 20*log10(abs(apply(allmeansE2[,electrodeindices,2,],c(1,3),mean))/abs(apply(allmeansE2[,electrodeindices,1,],c(1,3),mean)))
+
+allratios <- NULL
+allconds <- NULL
+allconts <- NULL
+allparticipants <- NULL
+counter <- 0
+for (cont in 1:length(contrastsdB)){
+  for (s in 1:nrow(allPratios)){
+    counter <- counter + 1
+    allratios[counter] <- allPratios[s,cont]
+    allconds[counter] <- 1
+    allparticipants[counter] <- s
+    allconts[counter] <- cont
+    
+    counter <- counter + 1
+    allratios[counter] <- allEratios[s,cont]
+    allconds[counter] <- 2
+    allparticipants[counter] <- s
+    allconts[counter] <- cont
+    
+    counter <- counter + 1
+    allratios[counter] <- allE2ratios[s,cont]
+    allconds[counter] <- 3
+    allparticipants[counter] <- s
+    allconts[counter] <- cont
+    
+  }
+}
+allparticipants <- as.factor(allparticipants)
+allconds <- as.factor(allconds)
+allconts <- as.factor(allconts)
+aovdata <- data.frame(allparticipants,allconds,allconts,allratios)
+ratioaov <- ezANOVA(aovdata,dv=allratios,within=c(allconds,allconts),wid=allparticipants)
+gg <- ratioaov$`Sphericity Corrections`$GGe
+
+if (processdata > 0){
 
 PratiosCI <- matrix(0,nrow=2,ncol=5)
 EratiosCI <- matrix(0,nrow=2,ncol=5)
@@ -1302,7 +1774,8 @@ for (level in 1:5){
     }
     E2ratiosCI[,level] <- quantile(bspop,c((1-0.68)/2,1-((1-0.68)/2)))
 }
-    
+
+
 plotlims <- c(15,40,-3,12)  
 ticklocsx <- contrastsdB
 ticklabelsx <-c(6,12,24,48,96) 
@@ -1344,15 +1817,17 @@ dev.off()
 
 ```
 
-```{r BSratios, fig.cap="Ratio of binocular to monocular response for three data types.", fig.align="center", echo=FALSE}
+Finally, we calculated the ratio of binocular to monocular responses across the three data types from Experiment 1. Figure \@ref(fig:BSratios) shows that these ratios are approximately $\sqrt2$ across the low-to-intermediate contrast range for all three data types. At higher contrasts, we see ratios of 2 or higher for the EEG data, but much weaker ratios near 1 for the pupillometry data. Note that the ratios here are calculated on a per-participant basis and then averaged, rather than being the ratios of the average values shown in Figures \@ref(fig:pupildata) and \@ref(fig:EEGdata). A $3 \times 5$ repeated measures ANOVA on the logarithmic (dB) ratios found a main effect of contrast (F(`r round(ratioaov$ANOVA$DFn[2]*gg[2],digits=2)`,`r round(ratioaov$ANOVA$DFd[2]*gg[2],digits=2)`) = `r round(ratioaov$ANOVA$F[2],digits=2)`, \emph{p} < `r round(ratioaov$ANOVA$p[2],digits=3)`), no effect of data modality (F(`r ratioaov$ANOVA$DFn[1]`,`r ratioaov$ANOVA$DFd[1]`) = `r round(ratioaov$ANOVA$F[1],digits=2)`, \emph{p} = `r round(ratioaov$ANOVA$p[1],digits=2)`), but a highly significant interaction (F(`r round(ratioaov$ANOVA$DFn[3]*gg[3],digits=2)`,`r round(ratioaov$ANOVA$DFd[3]*gg[3],digits=2)`) = `r round(ratioaov$ANOVA$F[3],digits=2)`, \emph{p} < `r round(ratioaov$ANOVA$p[3],digits=4)`).
+
+```{r BSratios, fig.cap="Ratio of binocular to monocular response for three data types. Each ratio is the average of ratios for N=30 participants, and error bars indicate bootstrapped standard errors.", fig.align="center", out.width = '50%', echo=FALSE}
 
 knitr::include_graphics(paste0(figdir,'BSratios.pdf'))
 
 ```
 
-
 ## Experiment 2
-The results from the second experiment are shown in \@ref(fig:TFdata). Figure \@ref(fig:TFdata)a is showing the Fourier spectra for responses to binocular flicker at the 5 different frequencies (2, 4, 8, 16, 30 Hz). We can observe that from 2 to 16 Hz, we recorded very clear and significant signals, as we can observe spikes at the respective frequencies and their subsequent harmonics. However, at 30 Hz, the responses recorded were mainly noise, with no clear data recorded. This is also reflected in figure \@ref(fig:TFdata)b, where we observe almost no amplitude recorded for monocular and binocular responses at 30 Hz. The rest of figure \@ref(fig:TFdata)b is showing the response at each stimulation frequency. We can see that there is an increase in the amplitudes from 2 Hz to 8 Hz and a decrease at 16 Hz. In general, we observe that the binocular response is twice, and more than twice, the monocular response from 2 to 16 Hz (fig. \@ref(fig:TFdata)c), suggesting that binocular facilitation is happening at higher frequencies. However, at 30 Hz, this facilitation is lost (the binocular and monocular responses are the same, as demonstrated by the binocular to monocular ratio being 1in figure \@ref(fig:TFdata)c). The fact that the signal recorded at the highest frequency is mainly noise would seem to suggest that the visual cortex cannot process temporal luminance modulations anymore.
+
+The strong binocular facilitation and weak interocular suppression in the EEG data from Experiment 1 was very different from previous findings on binocular combination using steady-state EEG with grating stimuli [@Baker2017]. One possible explanation is that the lower temporal frequency used here (2Hz, vs 5 or 7Hz in previous work) might be responsible for this difference. We therefore ran a second experiment to compare monocular and binocular responses at a range of temporal frequencies. Only EEG data were collected for this experiment, as the pupil response is negligible above around 2Hz [@Spitschan2014].
 
 ```{r include=FALSE, results='hide'}
 
@@ -1703,18 +2178,19 @@ dev.off()
 
 ```
 
-```{r TFdata, fig.cap="Binocular facilitation at different temporal frequencies. Panel (a) shows Fourier spectra for responses to binocular flicker at 5 different frequencies (offset vertically for clarity). Panel (b) shows the response at each stimulation frequency for monocular (red) and binocular (blue) presentation. Panel (c) shows the ratio of binocular to monocular responses. Error bars and shaded regions indicate bootstrapped standard errors across N=12 participants.", fig.align="center", echo=FALSE}
+Results from the temporal frequency experiment are shown in \@ref(fig:TFdata). Figure \@ref(fig:TFdata)a shows the Fourier spectra for responses to binocular flicker at 5 different frequencies (2, 4, 8, 16, and 30 Hz). From 2 to 16 Hz, clear signals are observed at each fundamental frequency, and typically also their higher harmonics (integer multiples of the fundamental). However, at 30 Hz (upper row), the responses recorded were not demonstrably above the noise baseline. Figure \@ref(fig:TFdata)b compares the monocular and binocular responses at each stimulation frequency. Here we replicate the substantial summation effect across frequencies up to and including 16Hz (Fig. \@ref(fig:TFdata)c), demonstrating that strong binocular facilitation in the EEG data of Experiment 1 cannot be attributed to our use of 2Hz flicker.
+
+```{r TFdata, fig.cap="Binocular facilitation at different temporal frequencies. Panel (a) shows Fourier spectra for responses to binocular flicker at 5 different frequencies (offset vertically for clarity). Panel (b) shows the response at each stimulation frequency for monocular (red circles) and binocular (blue squares) presentation. Panel (c) shows the ratio of binocular to monocular responses. Error bars and shaded regions indicate bootstrapped standard errors across N=12 participants.", fig.align="center", echo=FALSE}
 
 knitr::include_graphics(paste0(figdir,'TFdata.pdf'))
 
 ```
 
 ## Experiment 3
-The results from the third experiment are shown in figure \@ref(fig:matchingdata). Each curve is showing the contrast level in each eye for the different interocular ratios at the 24 \% (in red) and 48 \% (in blue) conditions.
 
-Looking at the results for the 48 \% contrast condition, we can observe that, when the match was presented binocularly (both eyes saw the same stimulus), the match appeared to have the same flickering intensity as the standard when the contrast in both eyes was selected to be, on average, 50 \% (red line). This is also observable for the 24 \% contrast condition, where the match appeared to have the same flickering intensity as the standard when the contrast was selected to be around 25 \%. These two results show that the paradigm was working correctly and that the participants could see the flicker properly.
+In Experiment 1 we found evidence of much stronger binocular facilitation for cortical responses to luminance flicker (measured using EEG), compared with subcortical responses (measured using pupillometry). Since perception is dependent on cortical responses, these results provide a clear prediction for percieved contrast judgements indexed by psychophysical contrast matching paradigms [e.g. @Anstis1998; @Levelt1965; @Quaia2018]. We therefore conducted such an experiment, in which participants judged which of two stimuli had the greater perceived amplitude of flicker. One stimulus was a matching stimulus, that had a fixed binocular flicker amplitude of either 24\% or 48\% (temporal) contrast. The other stimulus was a target stimulus, the contrast of which was controlled by a staircase algorithm. We tested 9 ratios of contrast between the left and right eyes.
 
-When the match was presented monocularly (only one eye was presented with a flickering stimulus), we observe that, for the match to appear to flicker similarly to the standard, the contrast in that eye was set to be around double the contrast of the standard. When the flicker was presented only to the left eye, for the 48 \% contrast, the contrast of the match was around 90 \%, and, for the 24 \% contrast, the contrast of the match was around 57 \%. When the flicker was presented only to the right eye, for the 48 \% contrast, the contrast in the right eye was around 96 \%, and, for the 24 \% contrast, the contrast was around 50 \%. When looking at the intermediate condition, we can see that the points, for both contrast conditions, seem to fall along the main diagonal representing the linear summation prediction, with the results for the 24 \% condition showing a very strong summation that seem to exceed this prediction. Overall, these results seem to suggest that the way we perceive temporal luminance modulations follows near linear combination rules, which is in line with the processes observed in the visual cortex in experiment 1 (fig. \@ref(fig:EEGdata)).
+The results from the matching experiment are shown in Figure \@ref(fig:matchingdata). Each data point indicates the contrast levels required in each eye that were perceptually equivalent to the binocular 24\% (red circles) and 48\% (blue circles) matching contrasts. At both matching contrasts, we see a very substantial increase in the physical contrast required for a monocular target (data points along the x- and y-axes), compared to a binocular target (points along the diagonal of x=y). For example with a 48\% match, the monocular targets required contrasts close to 100\%, whereas binocular targets required a contrast of around 50\%. The data points between these extremes also fall close to the predictions of a linear summation model (diagonal dotted lines), and are inconsistent with a winner-takes-all (or MAX) model (dashed lines). Overall, these matching results are consistent with the approximately linear summation effects observed in the EEG data of Experiment 1 (Figure \@ref(fig:EEGdata)c,f).
 
 ```{r include=FALSE, results='hide'}
 
@@ -1855,37 +2331,17 @@ dev.off()
 
 ```
   
-```{r matchingdata, fig.cap="Contrast matching functions. Dotted and dashed lines are predictions of canonical summation models with a linear exponent (dotted) or an infinite exponent (dashed). Error bars indicate the standard error across participants (N=10), and are constrained along radial lines converging at the origin. Interocular ratio distribution (from left to right of the figure): 1L0R, 1L0.25R, 1L0.5R, 1L0.75R, 1L1R, 0.75L1R, 0.5L1R, 0.25L1R, 0L1R.", fig.align="center", echo=FALSE}
+```{r matchingdata, fig.cap="Contrast matching functions. Dotted and dashed lines are predictions of canonical summation models with a linear exponent (dotted) or an infinite exponent (dashed). Error bars indicate the standard error across participants (N=10), and are constrained along radial lines converging at the origin.", out.width = '50%', fig.align="center", echo=FALSE}
 
 knitr::include_graphics(paste0(figdir,'matchingdata.pdf'))
 
 ```
 
 ## Computational modelling
-Several models have been developed and proposed to describe binocular combination and contrast matching results for spatial contrast. Among these, the models proposed by Ding and Sperling (2006) and Meese and colleagues (2006) are widely accepted. These models incorporate a dynamic contrast gain control, which allows to develop a model that combines binocular summation and interocular suppression
 
-The first model is a multistage model that consists of two pairs of gain control mechanisms that inhibit each other [@Ding2006]. In the earlier stage, the right and left eye channels exert gain control on the other channel. Then, they exert gain control on the other channel’s gain control. Lastly, the outputs from each channel are summed binocularly to determine the binocular signal’s magnitude.
+We fitted a computational model to the data from Experiments 1 & 3 using a hierarchical Bayesian approach. The model behaviour is displayed in Figure \@ref(fig:modelfigure)e-h, with empirical data replotted in Figure \@ref(fig:modelfigure)a-d for comparison. In general, the model captures the key characteristics of the empirical data. Note that there are some minor discrepancies, which are a consequence of the hierarchical nature of the modelling. In brief, the model is fitted to the amplitudes for each participant, and group-level parameter estimates are derived based on these fits (see Table \@ref(tab:paramtable)). This procedure discards the phase information, whereas the empirical averages are coherently averaged across participants (retaining phase information). This explains the amplitude differences between model and data, particularly at low target contrast levels, but are of no consequence for the pattern of relative responses across conditions.
 
-The second model is similar as it also incorporates gain control mechanisms [@Meese2006]. In the first stage, it is applied to the left and right eye channels with suppression from the other eye. Then the signal from the two eyes is summed binocularly and gain control is applied a second time. This second model in particular is interesting and relevant as it was designed to also explain data from matching experiments.
-
-We therefore decided to use and readapt this second model to see if it could be used to explain our three different data sets from experiments 1 and 3. In the first stage, the responses from the right and the left eyes are computed separately, as shown by equation 1 and 2:
-
-_RespL_ = $\frac{(L^q)}{Z + R + w \times R}$ (1)
-
-_RespR_ = $\frac{(R^q)}{Z + R + w \times L}$ (2)
-
-where _L_ and _R_ are the signals from the left and right eyes, _Z_ is a saturation constant, _q_ is an exponent and _w_ is the suppression from the opponent weight.
-
-In the second stage, the responses from the two eyes are summed binocularly:
-
-_Resp(L,R)_ = k $\times$ (RespL + RespR) + n
-
-where _k_ is the noise parameter.
-
-For our analysis, we implemented the model using a Bayesian approach, using the Stan software in Rstudio, which allowed us to generate a posterior parameter distribution. Results for this are shown in figure \@ref(fig:modelfigure)i and the summary of the median parameter values are displayed in table \@ref(tab:paramtable). The key finding is that the pupillometry results display a much higher suppression from the opponent eye, shown by the _w_ parameter in table \@ref(tab:paramtable) and the green line in figure \@ref(fig:modelfigure)i, than the EEG results at the first harmonic (grey line in figure \@ref(fig:modelfigure)i), the EEG results at the second harmonic (purple line in figure \@ref(fig:modelfigure)i) and the matching results (yellow line in figure \@ref(fig:modelfigure)i). These results offer an explanation to the data from the previous experiments: the higher suppression displayed by the pupillometry explains the non-linearity observed in the first experiment, while the lower suppression by the EEG at both harmonics and the matching explains the strong linearity observed in experiments 1 and 3.
-
-Finally, figures \@ref(fig:modelfigure)a-d show the behavioural data for our four main data sets from experiments 1 and 3, and figures \@ref(fig:modelfigure)e-h show the outputs that the model produced based on the median parameter values that are presented in table \@ref(tab:paramtable). We can see that the data outputted by the model has a similar has a similar behaviour to the empirical data that we collected in our experiments. This would seem to suggest that the model can offer a good explanation of our data.
-
+We were particularly interested in comparing the weight of interocular suppression across data sets. We therefore plot the posterior distributions for this parameter for all four data sets (see Figure \@ref(fig:modelfigure)i). The key finding is that the pupillometry results (green distribution) display a much greater weight of interocular suppression compared with the other data sets (grey, purple and yellow distributions). There is no overlap between the pupillometry distribution and any of the other three. All four distributions are also meaningfully below a weight of 1 -- the value that previous work using grating stimuli would predict [@Meese2006; @Baker2017]. These results offer an explanation of the empirical data: the strong interocular suppression for the pupillometry data is consistent with the weak binocular facilitation, and measurable dichoptic masking observed using that method. The weaker suppression for the other experiments is consistent with the near-linear binocular facilitation effects, and absence of dichoptic masking.
 
 ```{r include=FALSE, results='hide'}
 
@@ -2325,7 +2781,7 @@ a <- density(20*log10(matchingweightpop),from=-48,to=12)
 polygon(c(-48,a$x,12), c(0,a$y,0), col=colpal[6],border=NA) 
 
 prior <- dnorm(10^((-48:12)/20),1,0.5)
-prior <- 0.3*prior/max(prior)
+prior <- 0.5*prior/max(prior)
 lines(-48:12,prior)
 
 lines(20*log10(c(mean(pupilW),mean(pupilW))),c(0,0.6),lwd=3,col=colpal[3])
@@ -2415,7 +2871,7 @@ axis(1, at=ticklocsx, tck=0.01, lab=F, lwd=2)
 axis(2, at=ticklocsy, tck=0.01, lab=F, lwd=2)
 mtext(text = ticklabelsx, side = 1, at=ticklocsx)    
 mtext(text = ticklabelsy, side = 2, at=ticklocsy, line=0.2, las=1)  
-title(xlab="Target contrast (dB)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)    
+title(xlab="Target contrast (%)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)    
 title(ylab="Amplitude at 2Hz (mm)", col.lab=rgb(0,0,0), line=1.5, cex.lab=1.5)
 
 condlist <- c(1,2,3,6)
@@ -2495,7 +2951,7 @@ axis(1, at=ticklocsx, tck=0.01, lab=F, lwd=2)
 axis(2, at=ticklocsy, tck=0.01, lab=F, lwd=2)
 mtext(text = ticklabelsx, side = 1, at=ticklocsx)    
 mtext(text = ticklabelsy, side = 2, at=ticklocsy, line=0.2, las=1)  
-title(xlab="Target contrast (dB)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)    # titles for axes
+title(xlab="Target contrast (%)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)    
 title(ylab="Amplitude at 2Hz (µV) ", col.lab=rgb(0,0,0), line=1.5, cex.lab=1.5)
 
 condlist <- c(1,2,3,6)
@@ -2575,7 +3031,7 @@ axis(1, at=ticklocsx, tck=0.01, lab=F, lwd=2)
 axis(2, at=ticklocsy, tck=0.01, lab=F, lwd=2)
 mtext(text = ticklabelsx, side = 1, at=ticklocsx)    
 mtext(text = ticklabelsy, side = 2, at=ticklocsy, line=0.2, las=1)  
-title(xlab="Target contrast (dB)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)    # titles for axes
+title(xlab="Target contrast (%)", col.lab=rgb(0,0,0), line=1.2, cex.lab=1.5)  
 title(ylab="Amplitude at 4Hz (µV) ", col.lab=rgb(0,0,0), line=1.5, cex.lab=1.5)
 
 condlist <- c(1,2,3,6)
@@ -2883,7 +3339,7 @@ dev.off()
 
 ```
 
-```{r modelfigure, fig.cap="Summary of computational modelling. Panels (a-d) show model behaviour for our four main data set, pupillometry (a), first harmonic EEG responses (b), second harmonic EEG responses (c) and contrast matching (d). Panel (i) shows the posterior probability distributions of the interocular suppression parameter for each of the four model fits. The pupillometry distribution (green) is centred about a substantially higher suppressive weight than for the other data types (note the logarithmic x-axis). The black curve shows the (scaled) prior distribution for the weight parameter.", fig.align="center", echo=FALSE}
+```{r modelfigure, fig.cap="Summary of computational modelling. Panels (a-d) show empirical data from key conditions, replotted from earlier figures for the pupillometry (a), first harmonic EEG responses (b), second harmonic EEG responses (c) and contrast matching (d) experiments. Panels (e-h) show model behaviour for the same conditions, generated using the median group-level parameter values.  Panel (i) shows the posterior probability distributions of the interocular suppression parameter for each of the four model fits. The pupillometry distribution (green) is centred about a substantially higher suppressive weight than for the other data types (note the logarithmic x-axis). The black curve shows the (scaled) prior distribution for the weight parameter.", fig.align="center", echo=FALSE}
 
 knitr::include_graphics(paste0(figdir,'modelfigure.pdf'))
 
