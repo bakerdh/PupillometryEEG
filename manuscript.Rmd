@@ -1,7 +1,7 @@
 ---
 title: "Different rules for binocular combination of luminance flicker in cortical and subcortical pathways"
 author: "Federico G. Segala, Aurelio Bruno, Myat T. Aung, Alex R. Wade &  Daniel H. Baker"
-date: "`r Sys.Date()`"
+date: "Department of Psychology, University of York, UK"
 output:
   bookdown::pdf_document2:
     fig_caption: yes
@@ -251,7 +251,7 @@ We implemented the model within a Bayesian framework using the Stan software [@C
 
 ## Preregistration, data and code availability
 
-We initially preregistered our main hypotheses and analysis intentions for the first experiment. We then conducted a pilot study with N=12 participants, before making some minor changes to the stimulus (we added dim red lines to aid binocular fusion). We then ran the main experiment, followed by two additional experiments that were not preregistered. The preregistration document, raw data files, and experimental and analysis code, are available on the project repository: https://osf.io/tbema/.
+We initially preregistered our main hypotheses and analysis intentions for the first experiment. We then conducted a pilot study with N=12 participants, before making some minor changes to the stimulus (we added dim red lines to aid binocular fusion). We then ran the main experiment, followed by two additional experiments that were not preregistered. The preregistration document, raw data files, and experimental and analysis code, are available on the project repository: https://doi.org/10.17605/OSF.IO/TBEMA.
 
 # Results
 
@@ -3358,5 +3358,9 @@ We have demonstrated that binocular combination of flickering light differs betw
 # Acknowledgements
 
 Supported by BBSRC grant BB/V007580/1 awarded to DHB and ARW, and Wellcome Trust grant 213616/Z/18/Z to AB.
+
+# Author contributions
+
+**Federico Segala**: Methodology, software, formal analysis, investigation, data curation, writing - original draft, writing - review & editing, visualization. **Aurelio Bruno**: Conceptualization, writing - review & editing, supervision, project administration, funding acquisition. **Myat Aung**: Software, resources, writing - review & editing. **Alex Wade**: Conceptualization, methodology, resources, writing - review & editing, supervision, project administration, funding acquisition. **Daniel Baker**: Conceptualization, methodology, software, formal analysis, investigation, resources, data curation, writing - original draft, writing - review & editing, visualization, supervision, project administration, funding acquisition.
 
 # References
