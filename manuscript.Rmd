@@ -178,7 +178,7 @@ To address this shortcoming, we designed an experiment that allowed us to simult
 
 ## Participants
 
-Thirty, twelve and ten adult participants, whose ages ranged from 18 to 45, were recruited for Experiments 1, 2 and 3 respectively. All participants had normal or corrected to normal binocular vision, and gave written informed consent. Our procedures were approved by the Ethics Committee of the Department of Psychology at the University of York (identification number 792).
+Thirty (20 females), twelve (7 females) and ten (3 females) adult participants, whose ages ranged from 18 to 45, were recruited for Experiments 1, 2 and 3 respectively. All participants had normal or corrected to normal binocular vision, and gave written informed consent. Our procedures were approved by the Ethics Committee of the Department of Psychology at the University of York (identification number 792).
 
 ## Apparatus & stimuli
 
@@ -3362,5 +3362,9 @@ Supported by BBSRC grant BB/V007580/1 awarded to DHB and ARW, and Wellcome Trust
 # Author contributions
 
 **Federico Segala**: Methodology, software, formal analysis, investigation, data curation, writing - original draft, writing - review & editing, visualization. **Aurelio Bruno**: Conceptualization, writing - review & editing, supervision, project administration, funding acquisition. **Myat Aung**: Software, resources, writing - review & editing. **Alex Wade**: Conceptualization, methodology, resources, writing - review & editing, supervision, project administration, funding acquisition. **Daniel Baker**: Conceptualization, methodology, software, formal analysis, investigation, resources, data curation, writing - original draft, writing - review & editing, visualization, supervision, project administration, funding acquisition.
+
+# Declaration of interests
+
+The authors declare no competing interests.
 
 # References
