@@ -1,0 +1,502 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Different rules for binocular combination of luminance flicker in cortical and subcortical pathways},
+  pdfauthor={Federico G. Segala, Aurelio Bruno, Myat T. Aung, Alex R. Wade \& Daniel H. Baker},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{longtable,booktabs}
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+
+\title{Different rules for binocular combination of luminance flicker in cortical and subcortical pathways}
+\author{Federico G. Segala, Aurelio Bruno, Myat T. Aung, Alex R. Wade \& Daniel H. Baker}
+\date{Department of Psychology, University of York, UK}
+
+\begin{document}
+\maketitle
+
+\hypertarget{abstract}{%
+\section{Abstract}\label{abstract}}
+
+How does the brain combine information across the eyes? In primary visual cortex, spatial patterns are subject to `ocularity invariance', where monocular and binocular responses are rendered equal by mutual suppression between the eyes. Here we asked whether this invariance holds for pure changes in luminance. We collected steady-state EEG and pupillometry data simultaneously, and find strong deviations from ocularity invariance both in the cortex and also in the subcortical pathway that determines pupil diameter. In cortex, we find strong binocular facilitation, and negligible interocular suppression from cortical sources, whereas measurements of pupil diameter showed weaker facilitation and stronger suppression. This was not purely a consequence of the temporal stimulus parameters; pronounced binocular facilitation was also observed at faster flicker rates. Near-linear binocular combination was also found for the same stimuli using a perceptual matching task. A hierarchical Bayesian implementation of a standard binocular combination model confirms that interocular suppression was substantially weaker for our EEG and matching data compared with the pupillometry results. These findings illustrate that ocularity invariance is not a ubiquitous feature of visual processing, and that the brain can repurpose a generic algorithm for different functions by adjusting parameters such as the weight of suppression between pathways.
+
+\hypertarget{introduction}{%
+\section{Introduction}\label{introduction}}
+
+The brain must combine information across multiple sensory inputs to derive a coherent percept of the external world. This involves a process of signal combination both within\textsuperscript{1} and between\textsuperscript{2} the senses. Binocular vision is a useful test case for signal combination, as the inputs to the two eyes overlap substantially (in species with forward-facing eyes), and the neural locus is well-established.\textsuperscript{3} Much of our knowledge about binocular combination derives from studies on the contrast response of the `canonical' visual pathway, in which signals pass from the eyes to primary visual cortex (V1), via the lateral geniculate nucleus (LGN).\textsuperscript{4} However, signals are also combined across the eyes in the network of subcortical nuclei that govern pupil diameter in response to absolute light levels\textsuperscript{5} and much less is known about the computations that operate in these subcortical pathways. In addition, our primary purpose here is to investigate the computations governing signal combination in these two anatomically distinct pathways in response to luminance changes.
+
+For pattern vision, binocular presentation confers greater sensitivity to low contrast targets than monocular presentation. This is known as binocular summation, with summation ratios (the relative improvement under binocular presentation) at detection threshold lying between \(\sqrt{2}\) and 2.\textsuperscript{6,7} This advantage is lost at high stimulus intensities, where both psychophysical performance (contrast discrimination thresholds)\textsuperscript{8,9} and neural activity\textsuperscript{1,10} are approximately equal for monocular and binocular presentation. Contemporary models of binocular vision\textsuperscript{9,11} advocate a process of interocular suppression that normalizes the two eyes inputs at high contrasts and negates the binocular advantage. This is consistent with our everyday experience of `ocularity invariance':\textsuperscript{12} perceived contrast does not change when one eye is opened and closed.
+
+The pupillary light reflex is an automatic constriction of the iris sphincter muscles in response to increases in light levels, which causes the pupil to shrink.\textsuperscript{5} There is a clear binocular component to this reflex, as stimulation of one eye still causes constriction of the other eye's pupil (termed the consensual response; 13). Importantly, the neuroanatomical pathway involved completely bypasses the canonical cortical pathway (retina to V1), instead involving a network of subcortical nuclei, including the Pretectal Olivary nucleus, Superior Cervical ganglion, and Edinger-Westphal nucleus.\textsuperscript{5,14--16} To account for the consensual response, these brain regions must combine information from the left and right eyes,\textsuperscript{17} yet the computation that achieves this is achieved is unclear.
+
+To address this shortcoming, we designed an experiment that allowed us to simultaneously record electrophysiological and pupillometric responses to monocular and binocular stimuli. This novel paradigm allowed us to probe both cortical (using EEG) and subcortical (using a binocular eyetracker) pathways simultaneously in response to flickering light, and make quantitative comparisons between them. Periodic flicker entrains both neural\textsuperscript{18} and pupil\textsuperscript{19} responses at the flicker frequency, enabling precise estimation of response amplitudes in the Fourier domain. We followed up our main experiment with additional exploration of the effect of stimulus frequency, and a psychophysical matching experiment measuring perceived flicker intensity (i.e.~temporal contrast). The results are interpreted using a hierarchical Bayesian computational model of binocular vision, and reveal that subcortical pathways implement stronger interocular suppression than the canonical cortical pathway.
+
+\hypertarget{results}{%
+\section{Results}\label{results}}
+
+\hypertarget{experiment-1}{%
+\subsection{Experiment 1}\label{experiment-1}}
+
+The pupillometry results are summarised in Fig. \ref{fig:pupildata}. The group average waveform for binocular presentation is shown in Fig. \ref{fig:pupildata}a. There is a substantial pupil constriction at stimulus onset, followed by visible oscillations at the flicker frequency (2Hz, see waveform at foot). The average Fourier spectrum is displayed in Fig. \ref{fig:pupildata}b, and shows a clear spike at 2 Hz, but no evidence of a second harmonic response at 4Hz. These results demonstrate that our paradigm can evoke measurable steady-state pupil responses at 2Hz.
+
+\begin{figure}
+
+{\centering \includegraphics{Figures/pupildata} 
+
+}
+
+\caption{Summary of pupillometry results for N=30 participants. Panel (a) shows a group average waveform for binocular presentation (low pass filtered at 5Hz), with the driving signal plotted at the foot. Panel (b) shows the average Fourier spectrum, with an inset image illustrating the stimulus appearance (upper right). Panels (c,d) show contrast response functions at 2Hz for different conditions. Panel (e) shows contrast response functions at 1.6Hz for three conditions. Shaded regions and error bars indicate bootstrapped standard errors.}\label{fig:pupildata}
+\end{figure}
+
+Fig. \ref{fig:pupildata}c shows contrast response functions in response to stimuli flickering only at 2Hz. Response amplitudes increased monotonically with target contrast, confirming that our paradigm is suitable for measuring contrast-dependent differences in response (to our knowledge this is the first time this has been demonstrated). The amplitude of the binocular condition (blue squares) is consistently greater than that of the monocular condition (red circles) across all target contrasts. A \(2\times5\) repeated measures \(ANOVA^2_{circ}\)\textsuperscript{20} comparing these conditions revealed a significant main effect of target contrast (F(8,580) = 16.79, \(p\) \textless{} 0.001), a significant effect of condition (F(2,580) = 11.04, \(p\) \textless{} 0.001), and a significant interaction (F(8,580) = 56.25, \(p\) \textless{} 0.001). The dichoptic condition begins at a much higher amplitude, owing to binocular combination of the target and high (48\%) contrast mask, and then increases slightly with increasing target contrast (main effect of target contrast: F(8,232) = 3.03, \(p\) \textless{} 0.003).
+
+In Fig. \ref{fig:pupildata}d, we plot responses to monocular target stimuli flickering at 2Hz, when the other eye viewed stimuli flickering at 1.6Hz (the red monocular-only data are replotted from Fig. \ref{fig:pupildata}c for comparison). When the 1.6Hz component had the same contrast as the target (the binocular cross condition, shown in purple) responses were facilitated slightly at low contrasts, and suppressed at the highest target contrasts (interaction between contrast and condition: F(8,580) = 52.94, \(p\) \textless{} 0.001). When the 1.6Hz component had a fixed contrast of 48\% (the dichoptic cross condition, shown in yellow), responses were suppressed slightly across the contrast range (interaction between contrast and condition: F(8,580) = 62.05, \(p\) \textless{} 0.001).
+
+Fig. \ref{fig:pupildata}e shows responses at 1.6Hz, for the same conditions, as well as for a condition in which a monocular stimulus flickered at 1.6Hz (grey circles). Surprisingly there again appears to be a slight facilitation effect in the binocular cross condition, particularly at lower contrasts. The dichoptic cross condition does not show clear modulation with target contrast.
+
+Fig. \ref{fig:EEGdata} shows equivalent results, measured contemporaneously using EEG. Fig. \ref{fig:EEGdata}a shows the group average waveform for binocular presentation, and Fig. \ref{fig:EEGdata}b shows the Fourier spectrum for binocular presentation, both averaged across four posterior electrodes (\emph{Oz}, \emph{POz}, \emph{O1} and \emph{O2}, marked on the inset scalp plots). Unlike for the pupillometry data, there are clear responses at both the first harmonic frequency (2Hz), and also the second harmonic frequency (4Hz). We therefore calculated contrast response functions at both first and second harmonic frequencies.
+
+\begin{figure}
+
+{\centering \includegraphics{Figures/EEGdata} 
+
+}
+
+\caption{Summary of EEG results for N=30 participants. Panel (a) shows a group average waveform for binocular presentation (low pass filtered at 5Hz), with the driving signal plotted at the foot. Panel (b) shows the average Fourier spectrum, and inset scalp distributions. Black dots on the scalp plots indicate electrodes Oz, POz, O1 and O2. Panels (c,d) show contrast response functions at 2Hz for different conditions. Panel (e) shows contrast response functions at 1.6Hz for three conditions. Panels (f-h) are in the same format but for the second harmonic responses. Shaded regions and error bars indicate bootstrapped standard errors.}\label{fig:EEGdata}
+\end{figure}
+
+When stimuli in both eyes flicker at 2Hz, the binocular responses at the first (Fig. \ref{fig:EEGdata}c) and second (Fig. \ref{fig:EEGdata}f) harmonics are substantially greater than the monocular responses, particularly at high contrasts. Analysis of variance on the complex values (\(ANOVA^2_{circ}\)) revealed a main effect of contrast (F(8,580) = 4.38, \(p\) \textless{} 0.001) and an interaction effect (F(8,580) = 61.58, \(p\) \textless{} 0.001), but no effect of condition (\(p\) = 0.13) at the first harmonic, with a similar pattern of results obtained at the second harmonic. For the cross-frequency conditions (Fig. \ref{fig:EEGdata}d,g), there was no appreciable effect of adding a 1.6Hz component on the response at 2Hz or 4Hz (no effect of condition, and no interaction). Similarly, there were no clear interocular interactions between frequencies in the responses at 1.6Hz (Fig. \ref{fig:EEGdata}e) and 3.2Hz (Fig. \ref{fig:EEGdata}h). This pattern of results suggests that processing of temporal luminance modulations happens in a more linear way in visual cortex (indexed by EEG), compared with subcortical pathways (indexed by pupillometry), and shows no evidence of interocular suppression.
+
+Finally, we calculated the ratio of binocular to monocular responses across the three data types from Experiment 1. Fig. \ref{fig:BSratios} shows that these ratios are approximately \(\sqrt2\) across the low-to-intermediate contrast range for all three data types. At higher contrasts, we see ratios of 2 or higher for the EEG data, but much weaker ratios near 1 for the pupillometry data. Note that the ratios here are calculated on a per-participant basis and then averaged, rather than being the ratios of the average values shown in Fig. \ref{fig:pupildata} and \ref{fig:EEGdata}. A \(3 \times 5\) repeated measures ANOVA on the logarithmic (dB) ratios found a main effect of contrast (F(3.08,89.28) = 4.53, \emph{p} \textless{} 0.002), no effect of data modality (F(2,58) = 0.75, \emph{p} = 0.48), but a highly significant interaction (F(5.54,160.67) = 3.84, \emph{p} \textless{} \ensuremath{3\times 10^{-4}}).
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.5\linewidth]{Figures/BSratios} 
+
+}
+
+\caption{Ratio of binocular to monocular response for three data types. Each ratio is the average of ratios for N=30 participants, and error bars indicate bootstrapped standard errors.}\label{fig:BSratios}
+\end{figure}
+
+\hypertarget{experiment-2}{%
+\subsection{Experiment 2}\label{experiment-2}}
+
+The strong binocular facilitation and weak interocular suppression in the EEG data from Experiment 1 was very different from previous findings on binocular combination using steady-state EEG with grating stimuli.\textsuperscript{1} One possible explanation is that the lower temporal frequency used here (2Hz, vs 5 or 7Hz in previous work) might be responsible for this difference. We therefore ran a second experiment to compare monocular and binocular responses at a range of temporal frequencies. Only EEG data were collected for this experiment, as the pupil response is negligible above around 2Hz;\textsuperscript{19} note that we originally chose 2Hz because it produces measurable signals for both EEG and pupillometry, yet is unfortunately optimal for neither.
+
+Results from the temporal frequency experiment are shown in Fig. \ref{fig:TFdata}. Fig. \ref{fig:TFdata}a shows the Fourier spectra for responses to binocular flicker at 5 different frequencies (2, 4, 8, 16, and 30 Hz). From 2 to 16 Hz, clear signals are observed at each fundamental frequency, and typically also their higher harmonics (integer multiples of the fundamental). However, at 30 Hz (upper row), the responses recorded were not demonstrably above the noise baseline. Fig. \ref{fig:TFdata}b compares the monocular and binocular responses at each stimulation frequency. Here we replicate the substantial summation effect across frequencies up to and including 16Hz (Fig. \ref{fig:TFdata}c), demonstrating that strong binocular facilitation in the EEG data of Experiment 1 cannot be attributed to our use of 2Hz flicker.
+
+\begin{figure}
+
+{\centering \includegraphics{Figures/TFdata} 
+
+}
+
+\caption{Binocular facilitation at different temporal frequencies. Panel (a) shows Fourier spectra for responses to binocular flicker at 5 different frequencies (offset vertically for clarity). Panel (b) shows the response at each stimulation frequency for monocular (red circles) and binocular (blue squares) presentation. Panel (c) shows the ratio of binocular to monocular responses. Error bars and shaded regions indicate bootstrapped standard errors across N=12 participants.}\label{fig:TFdata}
+\end{figure}
+
+\hypertarget{experiment-3}{%
+\subsection{Experiment 3}\label{experiment-3}}
+
+In Experiment 1 we found evidence of stronger binocular facilitation for cortical responses to luminance flicker (measured using EEG), compared with subcortical responses (measured using pupillometry). Since perception is dependent on cortical responses, these results provide a clear prediction for perceived contrast judgements indexed by psychophysical contrast matching paradigms.\textsuperscript{21--23} We therefore conducted such an experiment, in which participants judged which of two stimuli had the greater perceived amplitude of flicker. One stimulus was a matching stimulus, that had a fixed binocular flicker amplitude of either 24\% or 48\% (temporal) contrast. The other stimulus was a target stimulus, the contrast of which was controlled by a staircase algorithm. We tested 9 ratios of contrast between the left and right eyes.
+
+The results from the matching experiment are shown in Fig. \ref{fig:matchingdata}. Each data point indicates the contrast levels required in each eye that were perceptually equivalent to the binocular 24\% (red circles) and 48\% (blue circles) matching contrasts. At both matching contrasts, we see a very substantial increase in the physical contrast required for a monocular target (data points along the x- and y-axes), compared to a binocular target (points along the diagonal of x=y). For example with a 48\% match, the monocular targets required contrasts close to 100\%, whereas binocular targets required a contrast of around 50\%. The data points between these extremes also fall close to the predictions of a linear summation model (diagonal dotted lines), and are inconsistent with a winner-takes-all (or MAX) model (dashed lines). Overall, these matching results are consistent with the approximately linear summation effects observed in the EEG data of Experiment 1 (Fig. \ref{fig:EEGdata}c,f).
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.5\linewidth]{Figures/matchingdata} 
+
+}
+
+\caption{Contrast matching functions. Dotted and dashed lines are predictions of canonical summation models with a linear exponent (dotted) or an infinite exponent (dashed). Error bars indicate the standard error across participants (N=10), and are constrained along radial lines converging at the origin. Note that, for the {48\%} match, the data point on the x axis falls higher than {100\%} contrast. This is because the psychometric function fits for some individuals were interpolated such that the PSE fell above {100\%}, shifting the mean slightly above that value.}\label{fig:matchingdata}
+\end{figure}
+
+\hypertarget{computational-modelling}{%
+\subsection{Computational modelling}\label{computational-modelling}}
+
+We fitted a computational model to the data from Experiments 1 \& 3 using a hierarchical Bayesian approach. The model behaviour is displayed in Fig. \ref{fig:modelfigure}e-h, with empirical data replotted in Fig. \ref{fig:modelfigure}a-d for comparison. In general, the model captures the key characteristics of the empirical data. Note that there are some minor discrepancies, which are a consequence of the hierarchical nature of the modelling. In brief, the model is fitted to the amplitudes for each participant, and group-level parameter estimates are derived based on these fits (see Table \ref{tab:paramtable}). This procedure discards the phase information, whereas the empirical averages are coherently averaged across participants (retaining phase information). This explains the amplitude differences between model and data, particularly at low target contrast levels, but is of little consequence for the pattern of relative responses across conditions, which is our main focus here.
+
+We were particularly interested in comparing the weight of interocular suppression across data sets. We therefore plot the posterior distributions for this parameter for all four data sets (see Fig. \ref{fig:modelfigure}i). The key finding is that the pupillometry results (green distribution) display a much greater weight of interocular suppression compared with the other data sets (grey, purple and yellow distributions). There is no overlap between the pupillometry distribution and any of the other three. All four distributions are also meaningfully below a weight of 1 -- the value that previous work using grating stimuli would predict,\textsuperscript{1,9} and the peak location of our prior distribution (black curve). These results offer an explanation of the empirical data: the strong interocular suppression for the pupillometry data is consistent with the weak binocular facilitation, and measurable dichoptic masking observed using that method. The weaker suppression for the other experiments is consistent with the near-linear binocular facilitation effects, and absent dichoptic masking.
+
+\begin{figure}
+
+{\centering \includegraphics{Figures/modelfigure} 
+
+}
+
+\caption{Summary of computational modelling. Panels (a-d) show empirical data from key conditions, replotted from earlier figures for the pupillometry (a), first harmonic EEG responses (b), second harmonic EEG responses (c) and contrast matching (d) experiments. Panels (e-h) show model behaviour for the same conditions, generated using the median group-level parameter values.  Panel (i) shows the posterior probability distributions of the interocular suppression parameter for each of the four model fits. The pupillometry distribution (green) is centred about a substantially higher suppressive weight than for the other data types (note the logarithmic x-axis). The black curve shows the (scaled) prior distribution for the weight parameter.}\label{fig:modelfigure}
+\end{figure}
+
+\begin{table}
+
+\caption{\label{tab:paramtable}Summary of median parameter values.}
+\centering
+\begin{tabular}[t]{l|c|c|c|c}
+\hline
+Data set & Z & k & w & Rmax\\
+\hline
+Pupillometry & 2.37 & 0.01 & 0.67 & 0.00023\\
+\hline
+EEG 1F & 2.59 & 0.15 & 0.02 & 0.0026\\
+\hline
+EEG 2F & 2.21 & 0.06 & 0.01 & 0.00404\\
+\hline
+Matching & 0.30 & 5.07 & 0.09 & -\\
+\hline
+\end{tabular}
+\end{table}
+
+\hypertarget{discussion}{%
+\section{Discussion}\label{discussion}}
+
+Using a novel paradigm that combines EEG and pupillometry, we found surprising results for the binocular integration of flickering light. In the visual cortex, the processing of spatially-uniform temporal luminance modulations seems to happen approximately linearly, with no evidence of interocular suppression. In the subcortical pathway, signal combination is more non-linear, with evidence of interocular suppression. This pattern of results was confirmed by computational modelling, which showed a much greater suppressive weight for the pupillometry data compared to the EEG data. Additionally, we found that perception of flickering light is consistent with a near-linear summation process, consistent with the cortical (EEG) responses.
+
+The results of our main experiment were unexpected for both the pupillometry and the EEG measures. Previous studies investigating binocular combination of spatial patterns (i.e.~sine wave grating stimuli) are all consistent with strong interocular suppression and weak binocular facilitation at high contrasts.\textsuperscript{1,9,10} Our second experiment ruled out the possibility that these differences were due to the lower temporal frequency (2Hz) used here. However, there is evidence of more extensive binocular facilitation for a range of other stimuli. For example, 23 observed a strong binocular facilitation (or `supersummation') in the reflexive eye movement response to rapidly moving stimuli, and 24 report a similar result in archival data on melatonin suppression due to light exposure. In the auditory system, interaural suppression of amplitude modulation also appears to be weak when measured using a similar steady-state paradigm.\textsuperscript{25} Finally, psychophysical matching experiments using static stimuli also show near-linear behaviour for luminance increments,\textsuperscript{21,22,26} though not for luminance decrements.\textsuperscript{21} Overall, this suggests that strong interocular normalization may be specific to spatial pattern vision, and not a general feature of sensory signal combination.
+
+Given the above, where does this leave our understanding of the overarching purpose of signal combination? 1 point out that strong suppression between channels that are subsequently summed is equivalent to a Kalman filter, which is the optimal method for combining two noisy inputs.\textsuperscript{2} This account has intuitive appeal, and is consistent with other models that propose binocular combination as a means of redundancy reduction.\textsuperscript{27,28} One possibility is that optimal combination is useful for visual perception --- a critical system for interacting with the local environment --- and is therefore worth devoting the additional resource of inhibitory wiring between ocular channels. However the other examples given in the previous paragraph are primarily physiological responses (pupil size, eye movements, hormone release) that may benefit less from an increased signal-to-noise ratio, or otherwise be phylogenetically older than binocular pattern vision. Conceptualised another way, the brain can repurpose a generic architecture for different situational demands by adjusting parameter values (here the weight of interocular suppression) to achieve different outcomes. Our future work in this area intends to compare binocular combination for specific photoreceptor pathways, including different cone classes, and intrinsically photoreceptive retinal ganglion cells.
+
+Pupil size determines the total amount of light falling on the retina. It is therefore the case that fluctuations in pupil diameter have a downstream effect on the signals reaching cortex. We did not incorporate such interactions into our computational model, though in principle this might be worthwhile. However we anticipate than any such effects would be small, since pupil modulations at 2Hz are in the order of 2\% of overall diameter.\textsuperscript{19} It is also the case that cortical activity can modulate pupil diameter, usually through arousal and attention mechanisms.\textsuperscript{29} We think it unlikely that these temporally coarse processes would have a differential effect on e.g.~monocular and binocular stimulation conditions in our experiment, and any fluctuations during an experimental session (perhaps owing to fatigue) will be equivalent for our comparisons of interest. Therefore we make the simplifying assumption that the two pathways are effectively distinct, but hope to investigate this directly in future neuroimaging work.
+
+Classic studies investigating the neurophysiological architecture of V1 reported that cells in cytochrome-oxidase `blobs'\textsuperscript{30,31} are biased towards low spatial frequencies,\textsuperscript{32,33} and relatively insensitive to stimulus orientation.\textsuperscript{30,31,34} As the blob regions are embedded within ocular dominance columns,\textsuperscript{30} they are also largely monocular.\textsuperscript{31,35} More recent work has reported psychophysical evidence for unoriented chromatic\textsuperscript{36} and achromatic\textsuperscript{37} mechanisms, that also appear to be monocular. Our use of luminance flicker might preferentially stimulate these mechanisms, perhaps explaining why our EEG data show little evidence of binocular interactions. Indeed, our EEG results could potentially be explained by a model involving entirely non-interacting monocular channels, with the binocular facilitation effects we find (e.g.~Fig. \ref{fig:BSratios} \& \ref{fig:TFdata}) owing to additivity of the electrophysiological response across independent monocular cells, rather than requiring binocular neurons. However our matching data (Fig. \ref{fig:matchingdata}), as well as everyday perceptual experience, indicates that luminance signals must be combined physiologically at some stage, and that this process still involves weak or absent interocular suppression.
+
+\hypertarget{conclusions}{%
+\section{Conclusions}\label{conclusions}}
+
+We have demonstrated that binocular combination of flickering light differs between cortical and subcortical pathways. Flicker was also associated with substantially weaker interocular suppression, and stronger binocular facilitation, compared to combination of spatial luminance modulations in visual cortex. Our computational framework for understanding signal combination permits direct comparisons between disparate experimental paradigms and data types. We anticipate that this will help elucidate the constraints the brain faces when combining different types of signals to govern perception, action and biological function.
+
+\hypertarget{methods}{%
+\section{Methods}\label{methods}}
+
+\hypertarget{participants}{%
+\subsection{Participants}\label{participants}}
+
+Thirty (20 females), twelve (7 females) and ten (3 females) adult participants, whose ages ranged from 18 to 45, were recruited for Experiments 1, 2 and 3 respectively. All participants had normal or corrected to normal binocular vision, and gave written informed consent in accordance to the Declaration of Helsinki. Our procedures were approved by the Ethics Committee of the Department of Psychology at the University of York (identification number 792).
+
+\hypertarget{apparatus-stimuli}{%
+\subsection{Apparatus \& stimuli}\label{apparatus-stimuli}}
+
+The stimuli were two discs of achromatic flickering light with a diameter of 3.74 degrees, presented on a black background. The same stimuli were used for all three experiments. Four dark red lines were added around both discs to help with their fusion into one binocular disc (see insert in Fig. \ref{fig:pupildata}b for an example of the fused stimulus). The discs were viewed through a four-mirror stereoscope, which used front silvered mirrors to avoid internal reflections, and meant that participants saw a single fused disc. The use of a stereoscope allowed us to modulate the stimuli in three different ocular configurations: monocular, binocular, and dichoptic. Note that during monocular presentation of flicker, the unstimulated eye still saw the static (non-flickering) disc of mean luminance.
+
+All stimuli had a mean luminance of 42 cd/m\(^2\) on an Iiyama VisionMaster™ Pro 510 display (800 x 600 pixels, 60 Hz refresh rate), which was gamma corrected using a Minolta LS-110 photometer (Minolta Camera Co.~Ltd., Japan). For experiments 1 and 2, the stimuli were presented using Psychopy (v3.0.7). For experiment 3, the stimuli were presented using Psychopy (v2022.1.1).
+
+EEG data were collected for Experiments 1 and 2 using a 64-electrode ANT WaveGuard cap and the signals were recorded at 1 kHz using the ASA software (ANT Neuro, Netherlands). Pupillometry data were collected for Experiment 1 using a binocular Pupil Core eye-tracker (Pupil Labs GmbH, Berlin, Germany; 38) running at 120 Hz, and the signals were recorded with the Pupil Capture software.
+
+\hypertarget{procedure}{%
+\subsection{Procedure}\label{procedure}}
+
+Before each experiment, participants calibrated the stereoscope by adjusting the angle of the mirrors. This was done so that they would perceive the two discs as one fused disc when looking at the screen through the stereoscope.
+
+\hypertarget{experiment-1-simultaneous-eeg-and-pupillometry}{%
+\subsubsection{Experiment 1: simultaneous EEG and pupillometry}\label{experiment-1-simultaneous-eeg-and-pupillometry}}
+
+The experiment was conducted in a windowless room, in which the only light source was the monitor. The participants sat at 99 cm from the monitor and the total optical viewing distance (through the stereoscope) was 107 cm. The experiment was carried out in a single session lasting 45 minutes in total, divided in three blocks of 15 minutes each. In each block, there were 60 trials lasting 15 seconds each (12s of stimulus presentation, with an interstimulus interval of 3s). The participants were given no task other than to look at the fixation cross in the middle of the disc while trying to minimise their blinking during the presentation period.
+
+We included six distinct ocular conditions, each at five temporal contrast levels (combined factorially) relative to the mean luminance: 6, 12, 24, 48 and 96\%. Contrast was defined as temporal Michelson contrast; the difference between maximum and minimum luminances, scaled by the mean and expressed as a percentage. In the first three conditions, the discs flickered at 2 Hz, in either a monocular, binocular, or dichoptic arrangement. In the dichoptic condition the non-target eye saw a fixed contrast of 48\%. In the remaining three conditions (termed the cross-frequency conditions) one eye's disc flickered at 1.6Hz, and the other eye's disc flickered at 2Hz. We also tested monocular (one eye sees 1.6Hz flicker, the other sees mean luminance), binocular (one eye sees each frequency at the target contrast) and dichoptic (target stimulus flickering at 2Hz, mask contrast of 48\% at 1.6Hz in the other eye) arrangements. The rationale for flickering both eyes at 2Hz is that we can then measure summation behaviour between the eyes in the pupil and EEG response at 2Hz. The rationale for flickering the eyes at different frequencies is that this permits measurement of suppression between the eyes (i.e.~the reduction in the 2Hz response when a 1.6Hz mask component is added to the other eye). We counterbalanced presentation of the target stimulus across the left and right eyes.
+
+\hypertarget{experiment-2-eeg-responses-across-temporal-frequency}{%
+\subsubsection{Experiment 2: EEG responses across temporal frequency}\label{experiment-2-eeg-responses-across-temporal-frequency}}
+
+This experiment used the same equipment set up as Experiment 1, except that the eye tracker was not used. Unlike the first experiment, only one contrast level was used (96\%) and the discs were set to flicker at five different frequencies (2, 4, 8, 16 and 30 Hz). Only two ocular configurations, monocular and binocular, were included, with the latter having both discs flickering at the same frequency. The experiment was carried out in one session lasting 25 minutes in total, divided into five blocks of 5 minutes each. In each block, there were 20 trials in total with the same timing as for Experiment 1.
+
+\hypertarget{experiment-3-temporal-contrast-matching}{%
+\subsubsection{Experiment 3: temporal contrast matching}\label{experiment-3-temporal-contrast-matching}}
+
+The experiment was conducted in a darkened room with a blacked-out window. The display equipment (monitor and stereoscope) were the same as for the two previous experiments, but no EEG or pupillometry data were collected. A two-interval contrast matching procedure was used to collect data. In one interval, participants were presented with a standard fused disc that flickered at a set contrast level (either 24 or 48\%), which was selected by the experimenter at the beginning of each block. In the other interval, a target disc flickering at varying contrast levels was displayed. The contrast level of the target was controlled by a 1-up, 1-down staircase moving in logarithmic (dB) steps of contrast. The ratio of flicker amplitudes in the left and right eyes was varied across blocks and was set to be 0, 0.25, 0.5, 0.75 or 1 (9 distinct conditions). The standard and target discs were displayed for 1 second each, with an interstimulus interval of 0.5 seconds. After both discs had appeared on screen, the participants had to indicate which interval they perceived as having the more intense flicker. The intervals were randomly ordered, and all discs flickered at a frequency of 2 Hz (two cycles in sine phase).
+
+Due to its long duration (approximately 3 hours in total), the participants completed the experiment across multiple sessions initiated at their own convenience. The experiment was divided into 54 blocks (3 repetitions \(\times\) 2 standard contrasts \(\times\) 9 target ratios), which lasted on average 3 minutes each, depending on the response speed of the participant. In each block, there were a total of 50 trials. No auditory feedback was given for this subjective task.
+
+\hypertarget{data-analysis}{%
+\subsection{Data analysis}\label{data-analysis}}
+
+EEG data were converted from the ANT-EEProbe format to a compressed csv text file using a custom Matlab script and components of the EEGlab toolbox.\textsuperscript{39} The data for each participant were then loaded into R for analysis, where a ten-second waveform for each trial at each electrode was extracted (omitting the first two seconds). The Fourier transform of each waveform was calculated, and the complex spectrum stored in a matrix. All repetitions of each condition were then averaged for each electrode. They were then averaged across four occipital electrodes (\emph{POz}, \emph{Oz}, \emph{O1}, \emph{O2}), to obtain individual results. Finally, these were averaged across participants to obtain the group results. All averaging was performed in the complex domain and therefore retained the phase information (i.e.~coherent averaging), and at each stage we excluded data points with a Mahalanobis distance exceeding \(D\) = 3 from the complex-valued mean.\textsuperscript{20} For statistical comparisons of complex-valued data, we use the \(ANOVA^2_{circ}\) statistic described by 20. This is a multivariate extension of ANOVA that assumes equal variance of the real and imaginary Fourier components, or equivalently, an extension of the \(T^2_{circ}\) statistic of 40 that can compare more than two conditions.
+
+A similar analysis pipeline was adopted for the pupillometry data. The data were converted from mp4 videos to a csv text file using the Pupil Player software,\textsuperscript{38} which estimated pupil diameter for each eye on each frame using a 3D model of the eyeball. The individual data were then loaded into R for analysis, where again a ten-second waveform for each trial in each eye was extracted (excluding the first two seconds after stimulus onset). We interpolated across any dropped or missing frames to ensure regular and continuous sampling over time. The Fourier transform was calculated for each waveform, and all repetitions of each condition were pooled across eye and then averaged. Finally, data were averaged across all participants to obtain the group results. Again, we used coherent averaging, and excluded outlying data points in the same way as for the EEG data. Note that previous pupillometry studies using luminance flicker have tended to fit a single sine-wave at the fundamental frequency, rather than using Fourier analysis.\textsuperscript{19} The Fourier approach is more robust to noise at other frequencies and has been used in some previous studies.\textsuperscript{41,42} Additionally, it makes the pupillometry analysis consistent with standard practice in steady-state EEG analysis.\textsuperscript{43}
+
+To analyse the matching data, we pooled the trial responses across all repetitions of a given condition for each participant. We then fitted a cumulative normal psychometric function to estimate the point of subjective equality at the 50\% level. Thresholds were averaged across participants in logarithmic (dB) units.
+
+For all experiments, we used a bootstrapping procedure with 1000 iterations to estimate standard errors across participants. All analysis and figure construction was conducted using a single R-script, available online, making this study fully computationally reproducible.
+
+\hypertarget{computational-model-and-parameter-estimation}{%
+\subsection{Computational model and parameter estimation}\label{computational-model-and-parameter-estimation}}
+
+To describe our data, we chose a model of binocular contrast gain control with the same general form as the first stage of the model proposed by 9. The second gain control stage was omitted\textsuperscript{1} to simplify the model and reduce the number of free parameters. The response of the left eye's channel is given by:
+
+\begin{equation}
+\label{eq:respL}
+Resp_L = \frac{L^2}{Z + L + wR},
+\end{equation}
+
+with an equivalent expression for the right eye:
+
+\begin{equation}
+\label{eq:respR}
+Resp_R = \frac{R^2}{Z + R + wL}.
+\end{equation}
+
+In both equations, \emph{L} and \emph{R} are the contrast signals from the left and right eyes, \emph{Z} is a saturation constant that shifts the contrast-response function laterally, and \emph{w} is the weight of suppression from the other eye.
+
+The responses from the two eyes are then summed binocularly:
+
+\begin{equation}
+\label{eq:respB}
+Resp_B = R_{max}(Resp_L + Resp_R) + n,
+\end{equation}
+
+where \emph{n} is a noise parameter, and \(R_{max}\) scales the overall response amplitude. The \(R_{max}\) parameter was omitted when modelling the contrast matching data, as it has no effect in this paradigm.
+
+Despite being derived from the model proposed by 9, the simplifications applied to this architecture make it very similar to other models.\textsuperscript{8,11,17,44} In particular we fixed the numerator exponent at 2 in our model, because otherwise this value tends to trade off with the weight of interocular suppression.\textsuperscript{26,45} Our key parameter of interest is the weight of interocular suppression. Large values around \(w\) = 1 result in a very small or nonexistent binocular advantage at suprathreshold contrasts, consistent with previous work using grating stimuli.\textsuperscript{1} Low values around \(w\) = 0 produce substantial, near-linear binocular facilitation.\textsuperscript{25}
+
+We implemented the model within a Bayesian framework using the Stan software.\textsuperscript{46} This allowed us to estimate group-level posterior parameter distributions for the weight of interocular suppression, \(w\), and the other free model parameters \(R_{max}\), \(Z\) and \(n\). The prior distributions for all parameters were Gaussian, with means and standard deviations of 1 and 0.5 for \(w\) and \(R_{max}\), and 5 and 2 for \(Z\) and \(n\), with these values chosen based on previous literature.\textsuperscript{9,26} We sampled from a Student's t-distribution for the amplitudes in the pupillometry and EEG experiments, and from a Bernoulli distribution for the single trial matching data. The models were fit using the individual data across all participants, independently for each data set. Because we used coherent averaging across participants, the group average amplitudes are shifted vertically relative to the model predictions, which are based on hierarchical fits to the individual participant amplitudes (put another way, the model does not implement coherent averaging). However it is clear that the character of the model in all cases gives a good representation of the data, as can be seen in Fig. \ref{fig:modelfigure}. We took posterior samples at over a million steps for each data set, using a computer cluster, and retained 10\% of samples for plotting.
+
+\hypertarget{preregistration}{%
+\subsection{Preregistration}\label{preregistration}}
+
+We initially preregistered our main hypotheses and analysis intentions for the first experiment. We then conducted a pilot study with N=12 participants, before making some minor changes to the stimulus (we added dim red lines to aid binocular fusion). We then ran the main experiment, followed by two additional experiments that were not preregistered. The preregistration document is available on the project repository: \url{https://doi.org/10.17605/OSF.IO/TBEMA}.
+
+\hypertarget{data-availability}{%
+\section{Data availability}\label{data-availability}}
+
+Raw data files are available on the project repository: \url{https://doi.org/10.17605/OSF.IO/TBEMA}.
+
+\hypertarget{code-availability}{%
+\section{Code availability}\label{code-availability}}
+
+Experimental and analysis codes are available on the project repository: \url{https://doi.org/10.17605/OSF.IO/TBEMA}.
+
+\hypertarget{funding}{%
+\section{Funding}\label{funding}}
+
+Supported by Biotechnology and Biological Sciences Research Council grant BB/V007580/1 awarded to DHB and ARW, and Wellcome Trust grant 213616/Z/18/Z to AB.
+
+\hypertarget{author-information}{%
+\section{Author information}\label{author-information}}
+
+\hypertarget{authors-and-affiliations}{%
+\subsection{Authors and Affiliations}\label{authors-and-affiliations}}
+
+\textbf{Department of Psychology, University of York, York, UK}
+
+Federico G. Segala, Aurelio Bruno, Myat T. Aung, Alex R. Wade \& Daniel H. Baker
+
+\hypertarget{contributions}{%
+\subsection{Contributions}\label{contributions}}
+
+\textbf{F.G.S.}: Methodology, software, formal analysis, investigation, data curation, writing - original draft, writing - review \& editing, visualization. \textbf{A.B.}: Conceptualization, writing - review \& editing, supervision, project administration, funding acquisition. \textbf{M.A.}: Software, resources, writing - review \& editing. \textbf{A.R.W.}: Conceptualization, methodology, resources, writing - review \& editing, supervision, project administration, funding acquisition. \textbf{D.H.B.}: Conceptualization, methodology, software, formal analysis, investigation, resources, data curation, writing - original draft, writing - review \& editing, visualization, supervision, project administration, funding acquisition.
+
+\hypertarget{corresponding-author}{%
+\subsection{Corresponding Author}\label{corresponding-author}}
+
+Correspondance to Federico G. Segala.
+
+\hypertarget{ethics-declarations}{%
+\section{Ethics declarations}\label{ethics-declarations}}
+
+\hypertarget{competing-interests}{%
+\subsection{Competing interests}\label{competing-interests}}
+
+The authors declare no competing interests.
+
+\hypertarget{references}{%
+\section*{References}\label{references}}
+\addcontentsline{toc}{section}{References}
+
+\hypertarget{refs}{}
+\leavevmode\hypertarget{ref-Baker2017}{}%
+1. Baker, D. H. \& Wade, A. R. Evidence for an optimal algorithm underlying signal combination in human visual cortex. \emph{Cereb Cortex} \textbf{27}, 254--264 (2017).
+
+\leavevmode\hypertarget{ref-Ernst2002}{}%
+2. Ernst, M. O. \& Banks, M. S. Humans integrate visual and haptic information in a statistically optimal fashion. \emph{Nature} \textbf{415}, 429--33 (2002).
+
+\leavevmode\hypertarget{ref-Hubel1962}{}%
+3. Hubel, D. H. \& Wiesel, T. N. Receptive fields, binocular interaction and functional architecture in the cat's visual cortex. \emph{J Physiol} \textbf{160}, 106--54 (1962).
+
+\leavevmode\hypertarget{ref-Purves2008}{}%
+4. Purves, D. \emph{et al.} \emph{Principles of Cognitive Neuroscience}. (Oxford University Press, 2008).
+
+\leavevmode\hypertarget{ref-McDougal2008}{}%
+5. McDougal, D. H. \& Gamlin, P. D. Pupillary control pathways. in \emph{The senses: A comprehensive reference} 521--536 (Elsevier, 2008).
+
+\leavevmode\hypertarget{ref-Campbell1965}{}%
+6. Campbell, F. W. \& Green, D. G. Monocular versus binocular visual acuity. \emph{Nature} \textbf{208}, 191--2 (1965).
+
+\leavevmode\hypertarget{ref-Baker2018}{}%
+7. Baker, D. H., Lygo, F. A., Meese, T. S. \& Georgeson, M. A. Binocular summation revisited: Beyond \(\sqrt{2}\). \emph{Psychol Bull} \textbf{144}, 1186--1199 (2018).
+
+\leavevmode\hypertarget{ref-Legge1984}{}%
+8. Legge, G. E. Binocular contrast summation--ii. Quadratic summation. \emph{Vision Res} \textbf{24}, 385--94 (1984).
+
+\leavevmode\hypertarget{ref-Meese2006}{}%
+9. Meese, T. S., Georgeson, M. A. \& Baker, D. H. Binocular contrast vision at and above threshold. \emph{J Vis} \textbf{6}, 1224--43 (2006).
+
+\leavevmode\hypertarget{ref-Moradi2009}{}%
+10. Moradi, F. \& Heeger, D. J. Inter-ocular contrast normalization in human visual cortex. \emph{J Vis} \textbf{9(3)}, 13 (2009).
+
+\leavevmode\hypertarget{ref-Ding2006}{}%
+11. Ding, J. \& Sperling, G. A gain-control theory of binocular combination. \emph{Proc Natl Acad Sci U S A} \textbf{103}, 1141--6 (2006).
+
+\leavevmode\hypertarget{ref-Baker2007}{}%
+12. Baker, D. H., Meese, T. S. \& Georgeson, M. A. Binocular interaction: Contrast matching and contrast discrimination are predicted by the same model. \emph{Spat Vis} \textbf{20}, 397--413 (2007).
+
+\leavevmode\hypertarget{ref-Wyatt1981}{}%
+13. Wyatt, H. J. \& Musselman, J. F. Pupillary light reflex in humans: Evidence for an unbalanced pathway from nasal retina, and for signal cancellation in brainstem. \emph{Vision Res} \textbf{21}, 513--25 (1981).
+
+\leavevmode\hypertarget{ref-Angee2021}{}%
+14. Angée, C., Nedelec, B., Erjavec, E., Rozet, J.-M. \& Fares Taie, L. Congenital microcoria: Clinical features and molecular genetics. \emph{Genes (Basel)} \textbf{12}, (2021).
+
+\leavevmode\hypertarget{ref-Mathot2018}{}%
+15. Mathôt, S. Pupillometry: Psychology, physiology, and function. \emph{J Cogn} \textbf{1}, 16 (2018).
+
+\leavevmode\hypertarget{ref-Wang2015}{}%
+16. Wang, C.-A. \& Munoz, D. P. A circuit for pupil orienting responses: Implications for cognitive modulation of pupil size. \emph{Curr Opin Neurobiol} \textbf{33}, 134--40 (2015).
+
+\leavevmode\hypertarget{ref-Doesschate1967}{}%
+17. Doesschate, J. ten \& Alpern, M. Effect of photoexcitation of the two retinas on pupil size. \emph{J Neurophysiol} \textbf{30}, 562--76 (1967).
+
+\leavevmode\hypertarget{ref-Norcia2015}{}%
+18. Norcia, A. M., Appelbaum, L. G., Ales, J. M., Cottereau, B. R. \& Rossion, B. The steady-state visual evoked potential in vision research: A review. \emph{J Vis} \textbf{15(6)}, 4 (2015).
+
+\leavevmode\hypertarget{ref-Spitschan2014}{}%
+19. Spitschan, M., Jain, S., Brainard, D. H. \& Aguirre, G. K. Opponent melanopsin and s-cone signals in the human pupillary light response. \emph{Proc Natl Acad Sci U S A} \textbf{111}, 15568--72 (2014).
+
+\leavevmode\hypertarget{ref-Baker2021}{}%
+20. Baker, D. H. Statistical analysis of periodic data in neuroscience. \emph{Neurons, Behavior, Data analysis, and Theory} \textbf{5}, (2021).
+
+\leavevmode\hypertarget{ref-Anstis1998}{}%
+21. Anstis, S. \& Ho, A. Nonlinear combination of luminance excursions during flicker, simultaneous contrast, afterimages and binocular fusion. \emph{Vision Res} \textbf{38}, 523--39 (1998).
+
+\leavevmode\hypertarget{ref-Levelt1965}{}%
+22. Levelt, W. J. Binocular brightness averaging and contour information. \emph{Br J Psychol} \textbf{56}, 1--13 (1965).
+
+\leavevmode\hypertarget{ref-Quaia2018}{}%
+23. Quaia, C., Optican, L. M. \& Cumming, B. G. Binocular summation for reflexive eye movements. \emph{J Vis} \textbf{18(4)}, 7 (2018).
+
+\leavevmode\hypertarget{ref-Spitschan2019}{}%
+24. Spitschan, M. \& Cajochen, C. Binocular facilitation in light-mediated melatonin suppression? \emph{J Pineal Res} \textbf{67}, e12602 (2019).
+
+\leavevmode\hypertarget{ref-Baker2020}{}%
+25. Baker, D. H. \emph{et al.} Binaural summation of amplitude modulation involves weak interaural suppression. \emph{Sci Rep} \textbf{10}, 3560 (2020).
+
+\leavevmode\hypertarget{ref-Baker2012}{}%
+26. Baker, D. H., Wallis, S. A., Georgeson, M. A. \& Meese, T. S. Nonlinearities in the binocular combination of luminance and contrast. \emph{Vision Res} \textbf{56}, 1--9 (2012).
+
+\leavevmode\hypertarget{ref-Li1994}{}%
+27. Li, Z. \& Atick, J. J. Efficient stereo coding in the multiscale representation. \emph{Network: Computation in Neural Systems} \textbf{5}, 157--174 (1994).
+
+\leavevmode\hypertarget{ref-May2022}{}%
+28. May, K. \& Zhaoping, L. Li and Atick's theory of efficient binocular coding: A tutorial and mini-review. \emph{Vision Res} \textbf{201}, 107950 (2022).
+
+\leavevmode\hypertarget{ref-Bradley2008}{}%
+29. Bradley, M. M., Miccoli, L., Escrig, M. A. \& Lang, P. J. The pupil as a measure of emotional arousal and autonomic activation. \emph{Psychophysiology} \textbf{45}, 602--7 (2008).
+
+\leavevmode\hypertarget{ref-Horton1981}{}%
+30. Horton, J. C. \& Hubel, D. H. Regular patchy distribution of cytochrome oxidase staining in primary visual cortex of macaque monkey. \emph{Nature} \textbf{292}, 762--4 (1981).
+
+\leavevmode\hypertarget{ref-Livingstone1984}{}%
+31. Livingstone, M. S. \& Hubel, D. H. Anatomy and physiology of a color system in the primate visual cortex. \emph{J Neurosci} \textbf{4}, 309--56 (1984).
+
+\leavevmode\hypertarget{ref-Tootell1988}{}%
+32. Tootell, R. B., Silverman, M. S., Hamilton, S. L., Switkes, E. \& De Valois, R. L. Functional anatomy of macaque striate cortex. V. Spatial frequency. \emph{J Neurosci} \textbf{8}, 1610--24 (1988).
+
+\leavevmode\hypertarget{ref-Edwards1995}{}%
+33. Edwards, D. P., Purpura, K. P. \& Kaplan, E. Contrast sensitivity and spatial frequency response of primate cortical neurons in and around the cytochrome oxidase blobs. \emph{Vision Res} \textbf{35}, 1501--23 (1995).
+
+\leavevmode\hypertarget{ref-Economides2011}{}%
+34. Economides, J. R., Sincich, L. C., Adams, D. L. \& Horton, J. C. Orientation tuning of cytochrome oxidase patches in macaque primary visual cortex. \emph{Nat Neurosci} \textbf{14}, 1574--80 (2011).
+
+\leavevmode\hypertarget{ref-Tychsen2004}{}%
+35. Tychsen, L., Wong, A. M.-F. \& Burkhalter, A. Paucity of horizontal connections for binocular vision in v1 of naturally strabismic macaques: Cytochrome oxidase compartment specificity. \emph{The Journal of Comparative Neurology} \textbf{474}, 261--275 (2004).
+
+\leavevmode\hypertarget{ref-Gheiratmand2013}{}%
+36. Gheiratmand, M., Meese, T. S. \& Mullen, K. T. Blobs versus bars: Psychophysical evidence supports two types of orientation response in human color vision. \emph{Journal of Vision} \textbf{13(1)}, 2 (2013).
+
+\leavevmode\hypertarget{ref-Meese2011}{}%
+37. Meese, T. S. \& Baker, D. H. A reevaluation of achromatic spatio-temporal vision: Nonoriented filters are monocular, they adapt, and can be used for decision making at high flicker speeds. \emph{iPerception} \textbf{2}, 159--82 (2011).
+
+\leavevmode\hypertarget{ref-Kassner2014}{}%
+38. Kassner, M., Patera, W. \& Bulling, A. Pupil: An open source platform for pervasive eye tracking and mobile gaze-based interaction. in \emph{Proceedings of the 2014 ACM international joint conference on pervasive and ubiquitous computing: Adjunct publication} 1151--1160 (UbiComp '14 Adjunct; ACM, 2014). doi:\href{https://doi.org/10.1145/2638728.2641695}{10.1145/2638728.2641695}.
+
+\leavevmode\hypertarget{ref-Delorme2004}{}%
+39. Delorme, A. \& Makeig, S. EEGLAB: An open source toolbox for analysis of single-trial EEG dynamics including independent component analysis. \emph{J Neurosci Methods} \textbf{134}, 9--21 (2004).
+
+\leavevmode\hypertarget{ref-Victor1991}{}%
+40. Victor, J. D. \& Mast, J. A new statistic for steady-state evoked potentials. \emph{Electroencephalogr Clin Neurophysiol} \textbf{78}, 378--88 (1991).
+
+\leavevmode\hypertarget{ref-Barrionuevo2014}{}%
+41. Barrionuevo, P. A. \emph{et al.} Assessing rod, cone, and melanopsin contributions to human pupil flicker responses. \emph{Invest Ophthalmol Vis Sci} \textbf{55}, 719--27 (2014).
+
+\leavevmode\hypertarget{ref-Barrionuevo2016}{}%
+42. Barrionuevo, P. A. \& Cao, D. Luminance and chromatic signals interact differently with melanopsin activation to control the pupil light response. \emph{J Vis} \textbf{16(11)}, 29 (2016).
+
+\leavevmode\hypertarget{ref-Figueira2022}{}%
+43. Figueira, J. S. B., Kutlu, E., Scott, L. S. \& Keil, A. The freqtag toolbox: A principled approach to analyzing electrophysiological time series in frequency tagging paradigms. \emph{Dev Cogn Neurosci} \textbf{54}, 101066 (2022).
+
+\leavevmode\hypertarget{ref-Schrodinger1926}{}%
+44. Schrödinger, E. Die gesichtsempfindungen. in \emph{Mueller-pouillets lehrbuch der physik (11th ed.)} vol. Book 2 456--560 (Vieweg: Braunschweig, 1926).
+
+\leavevmode\hypertarget{ref-Kingdom2015}{}%
+45. Kingdom, F. A. A. \& Libenson, L. Dichoptic color saturation mixture: Binocular luminance contrast promotes perceptual averaging. \emph{J Vis} \textbf{15(5)}, 2 (2015).
+
+\leavevmode\hypertarget{ref-Carpenter2017}{}%
+46. Carpenter, B. \emph{et al.} Stan: A probabilistic programming language. \emph{Journal of Statistical Software} \textbf{76}, 1--32 (2017).
+
+\end{document}
