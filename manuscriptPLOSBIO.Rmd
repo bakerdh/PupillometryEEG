@@ -1,18 +1,20 @@
 ---
 title: "Different rules for binocular combination of luminance flicker in cortical and subcortical pathways"
+short title: "Binocular combination of flickering light"
 author: "Federico G. Segala, Aurelio Bruno, Myat T. Aung, Alex R. Wade &  Daniel H. Baker"
 date: "Department of Psychology, University of York, UK"
+header-includes: \usepackage{setspace}\doublespacing
 output:
-  word_document: default
-  pdf_document:
-    toc: no
   bookdown::pdf_document2:
     fig_caption: yes
     toc: no
     keep_tex: yes
+  pdf_document:
+    toc: no
+  word_document: default
   html_document: default
 bibliography: references.bib
-csl: pnas.csl
+csl: plos-biology.csl
 ---
 
 ```{r setup, include=FALSE}
@@ -172,15 +174,14 @@ Federico G. Segala, email: fgs502@york.ac.uk
 
 
 **Keywords:** Pupillary light reflex; Pupillometry; EEG; Pupil diameter; Binocular vision; Binocular interactions; Contrast matching; Computational modelling; Psychophysics
-
+\newpage
 
 # Abstract
 
 How does the human brain combine information across the eyes? It has been known for many years that cortical normalisation mechanisms implement ‘ocularity invariance’: equalising neural responses to spatial patterns presented either monocularly or binocularly. Here we used a novel combination of electrophysiology, psychophysics, pupillometry and computational modelling to ask whether this invariance also holds for flickering luminance stimuli with no spatial contrast. We find dramatic violations of ocularity invariance for these stimuli, both in cortex and also in the subcortical pathways that govern pupil diameter. Specifically, we find substantial binocular facilitation in both pathways with the effect being strongest in cortex. Near-linear binocular additivity (instead of ocularity invariance) was also found using a perceptual luminance matching task. Ocularity invariance is therefore not a ubiquitous feature of visual processing, and the brain appears to repurpose a generic normalisation algorithm for different visual functions by adjusting the amount of interocular suppression.
 
 # Significance Statement
-
-Most people have two eyes but the world appears the same regardless of whether one or both of them are open. This invariance must be implemented after the signals from the eyes arrive in the brain, and for many decades it has been thought that it happens at the first stage of cortical visual processing (primary visual cortex). However, this is not the entire story. Using fast measurements of neuronal activity as well as measures of pupil size and perception, we demonstrate that some types of visual input (specifically flickering lights) strongly violate ‘ocularity invariance’. Instead, the brain appears to repurpose a ‘canonical’ algorithm of signal combination for different situations by adjusting the amount of suppression between the eyes. 
+Please note that it should not exceed 120 words, but should be at least 50 words in length. 
 
 # Introduction
 
@@ -3373,7 +3374,7 @@ Classic studies investigating the neurophysiological architecture of V1 reported
 
 We have demonstrated that binocular combination of flickering light differs between cortical and subcortical pathways. Flicker was also associated with substantially weaker interocular suppression, and stronger binocular facilitation, compared to combination of spatial luminance modulations in visual cortex. Our computational framework for understanding signal combination permits direct comparisons between disparate experimental paradigms and data types. We anticipate that this will help elucidate the constraints the brain faces when combining different types of signals to govern perception, action and biological function.
 
-# Acknowledgments and funding sources
+# Acknowledgements
 
 Supported by Biotechnology and Biological Sciences Research Council grant BB/V007580/1 awarded to DHB and ARW, and Wellcome Trust grant 213616/Z/18/Z to AB.
 
