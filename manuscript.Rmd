@@ -415,7 +415,7 @@ for (cond in 1:6){
       i <- which(D<SDthresh) 
     cleanmeansP[cond,level] <- mean(temp[i])}
 
-    temp <- c(pupilmasks[,,startindex+level],pupiltargets[,,startindex+level+5])
+    temp <- c(pupilmasks[,,startindex+level],pupilmasks[,,startindex+level+5])
         cartdata <- data.frame(Re(temp),Im(temp))
     if (sum(cartdata)!=0){
       D <- sqrt(stats::mahalanobis(cartdata, colMeans(cartdata), cov(cartdata)))
