@@ -7,9 +7,7 @@ output:
     fig_caption: yes
     toc: no
     keep_tex: yes
-  pdf_document:
-    toc: no
-  word_document: default
+  word_document2: default
   html_document: default
 bibliography: references.bib
 csl: elife.csl
@@ -17,7 +15,7 @@ csl: elife.csl
 
 ```{r setup, include=FALSE}
 
-processdata <- 0  # this flag determines the amount of processing, with 4 levels:
+processdata <- 3  # this flag determines the amount of processing, with 4 levels:
 # 0 - do no processing, generate the pdf using existing versions of all figures
 # 1 - generate figures using the processed group data
 # 2 - average data across participants, do bootstrapping and modelling
@@ -303,6 +301,7 @@ maskindex2 <- (2*1.6*10)+1
          # and delete the tar file to save storage space
          file.remove(paste0(rawdir,'P',100+participant,'.tar'))
        }
+      }
       
       d <- dir(paste0(rawdir,'P',100+participant),full.names=TRUE)
        
@@ -469,7 +468,6 @@ save(file=paste(datadir,'P',100+participant,'summary.RData',sep=''),list=c('clea
       }
       
     
-    }
   }
   
 
@@ -1922,9 +1920,10 @@ if (processdata > 2){
         }
       }
       
-    }
+
     
     save(file=paste0(datadir,'P',150+participant,'summary.RData'),list=c('cleanmeansE','meanspec'))
+    }
     
   }
   
@@ -2473,7 +2472,7 @@ adaptSteps <- 1000  # Number of steps to "tune" the samplers
 burnInSteps <- 2000 
 thinSteps <- 10
 nChains <- 8
-ncores <- detectCores()/2  # because of multi-threading, this is usually double the true number of physical cores, so we halve the number as Stan can only use physical cores
+ncores <- 8  # because of multi-threading, this is usually double the true number of physical cores, so we halve the number as Stan can only use physical cores
 options(mc.cores=ncores)
 
 if (!file.exists(paste0(datadir,'matchingdata.csv'))){
