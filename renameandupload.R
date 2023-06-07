@@ -80,3 +80,32 @@ for (s in 1:12){
   
 }
 
+
+osfproject <- osf_retrieve_node("sjymf")
+componentlist <- osf_ls_nodes(osfproject)
+
+p <- getwd()
+
+for (s in 1:12){
+  
+  subj <- paste0('P',s+200)
+  
+  subjdir <- paste0('/Users/db900/Documents/git/PupillometryEEG/local/rawdata/',subj)
+  if (!file.exists(subjdir)){dir.create(subjdir)}
+  
+  setwd(subjdir)
+  
+  d <- dir(subjdir)
+  
+  tar(tarfile=paste0(subj,'.tar'),files=d,compression='gzip')
+  setwd(p)
+  
+  datafilesonOSF <- osf_ls_files(osfproject,n_max=300)
+  
+  if (!pmatch(paste0(subj,'.tar'),datafilesonOSF$name,nomatch=0)){
+    osf_upload(osfproject,paste0(subjdir,'/',subj,'.tar'),progress=TRUE)
+  }
+  
+  # unlink(subjdir,recursive=TRUE)
+  
+}
