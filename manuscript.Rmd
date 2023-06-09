@@ -12,6 +12,7 @@ output:
   word_document2: default
   html_document: default
 bibliography: references.bib
+link-citations: true
 csl: elife.csl
 header-includes:
 - \usepackage{float}
@@ -20,17 +21,18 @@ header-includes:
 - \renewcommand{\thetable}{A\arabic{table}}
 - \setcounter{figure}{0}
 - \renewcommand{\thefigure}{A\arabic{figure}}}
+- \usepackage{caption}
 ---
 
 ```{r setup, include=FALSE}
 
-processdata <- 2  # this flag determines the amount of processing, with 4 levels:
+processdata <- 0  # this flag determines the amount of processing, with 4 levels:
 # 0 - do no processing, generate the pdf using existing versions of all figures
 # 1 - generate figures using the processed group data
 # 2 - average data across participants, do bootstrapping
 # 3 - download all raw data and analyse (requires 48GB of storage)
 
-domodelling <- 1    # if set to 1, run the Stan models (takes ~24 hours)
+domodelling <- 0    # if set to 1, run the Stan models (takes ~24 hours)
 
 # cut off for data inclusion (Mahalanobis distance for complex data)
 SDthresh <<- 3
