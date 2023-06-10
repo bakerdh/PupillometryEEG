@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  document:
+    build:
+      dockerfile: docker/Dockerfile
+      context: .
+    container_name: bakerdh/pupillometryeeg:knit
+    image: bakerdh/pupillometryeeg:knit
+    volumes:
+      - .:/home/rstudio
+    environment:
+      DISABLE_AUTH: 'true'
+    working_dir: /home/rstudio
+    command: make document-docker
