@@ -26,7 +26,7 @@ header-includes:
 
 ```{r setup, include=FALSE}
 
-processdata <- 0  # this flag determines the amount of processing, with 4 levels:
+processdata <- 1  # this flag determines the amount of processing, with 4 levels:
 # 0 - do no processing, generate the pdf using existing versions of all figures
 # 1 - generate figures using the processed group data
 # 2 - average data across participants, do bootstrapping
@@ -226,7 +226,7 @@ The stimuli were two discs of achromatic flickering light with a diameter of 3.7
 
 All stimuli had a mean luminance of 42 cd/m$^2$ on an Iiyama VisionMaster™ Pro 510 display (800 x 600 pixels, 60 Hz refresh rate), which was gamma corrected using a Minolta LS-110 photometer (Minolta Camera Co. Ltd., Japan). For experiments 1 and 2, the stimuli were presented using Psychopy (v3.0.7). For experiment 3, the stimuli were presented using Psychopy (v2022.1.1).
 
-EEG data were collected for Experiments 1 and 2 using a 64-electrode ANT WaveGuard cap and the signals were recorded at 1 kHz using the ASA software (ANT Neuro, Netherlands). Pupillometry data were collected for Experiment 1 using a binocular Pupil Core eye-tracker (Pupil Labs GmbH, Berlin, Germany; @Kassner2014) running at 120 Hz, and the signals were recorded with the Pupil Capture software.
+EEG data were collected for Experiments 1 and 2 using a 64-electrode ANT WaveGuard cap and the signals were recorded at 1 kHz using the ASA software (ANT Neuro, Netherlands). Pupillometry data were collected for Experiment 1 using a binocular Pupil Core eye-tracker [Pupil Labs GmbH, Berlin, Germany\; @Kassner2014] running at 120 Hz, and the signals were recorded with the Pupil Capture software.
 
 ## Procedure
 
