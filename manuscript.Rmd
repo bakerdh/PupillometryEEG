@@ -26,7 +26,7 @@ header-includes:
 
 ```{r setup, include=FALSE}
 
-processdata <- 1  # this flag determines the amount of processing, with 4 levels:
+processdata <- 2  # this flag determines the amount of processing, with 4 levels:
 # 0 - do no processing, generate the pdf using existing versions of all figures
 # 1 - generate figures using the processed group data
 # 2 - average data across participants, do bootstrapping
