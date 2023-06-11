@@ -22,6 +22,5 @@ boot \
 quickpsy \
 rstan \
 coda \
-parallel \
 osfr
 
