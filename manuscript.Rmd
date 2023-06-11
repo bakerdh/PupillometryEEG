@@ -207,6 +207,16 @@ if (!file.exists(datadir)){dir.create(datadir)}   # create a local directory to 
           osf_download(osffiles[fid,],datadir,progress=TRUE)
          } 
 
+         if (!file.exists(paste0(localdir,'StimulusExample.png'))){
+           # download it from OSF
+           if (!exists('osffiles')){
+           osfnode <- 'tbema'
+           osfproject <- osf_retrieve_node(osfnode)
+          osffiles <- osf_ls_files(osfproject,n_max=300)}
+          fid <- which(osffiles$name=='StimulusExample.png')
+          osf_download(osffiles[fid,],localdir,progress=TRUE)
+         } 
+
 ```
 
 # Abstract
