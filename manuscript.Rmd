@@ -202,7 +202,6 @@ if (!file.exists(paste0(datadir,'headerfile.csv'))){
 # copy from resources folder
 file.copy('resources/headerfile.csv',paste0(datadir,'headerfile.csv'))
 } 
-
 if (!file.exists(paste0(localdir,'StimulusExample.png'))){
 # copy from resources folder
 file.copy('resources/StimulusExample.png',paste0(localdir,'StimulusExample.png'))
@@ -210,13 +209,16 @@ file.copy('resources/StimulusExample.png',paste0(localdir,'StimulusExample.png')
 }
 
 if (processdata==2){
-# if we're going to need the pre-processed files, download all in a zip file
+# if we're going to need the pre-processed files, extract from zip file
   if (!file.exists(paste0(datadir,'P101summary.RData'))){
+   if (file.exists('resources/allprocessed.zip')){file.copy('resources/allprocessed.zip',localdir)}
+   if (!file.exists('resources/allprocessed.zip')){ 
           osfnode <- '2qu6y'
           osfproject <- osf_retrieve_node(osfnode)
           osffiles <- osf_ls_files(osfproject,n_max=300)
           fid <- which(osffiles$name=='allprocessed.zip')
           osf_download(osffiles[fid,],localdir,progress=TRUE)
+   }
           unzip(paste0(localdir,'allprocessed.zip'),exdir=localdir)
           d <- dir(paste0(localdir,'allprocessed'),full.names=TRUE)
           file.copy(d,datadir)
@@ -4394,3 +4396,19 @@ dev.off()
 }
 
 ```
+
+Figures \@ref(fig:appendixfig1) and \@ref(fig:appendixfig2)
+
+```{r appendixfig1, fig.cap="S.", fig.align="center", echo=FALSE}
+
+knitr::include_graphics(paste0(figdir,'pupildataRep.pdf'))
+
+```
+
+```{r appendixfig2, fig.cap="S.", fig.align="center", echo=FALSE}
+
+knitr::include_graphics(paste0(figdir,'EEGdataRep.pdf'))
+
+```
+
+
