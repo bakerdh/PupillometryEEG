@@ -197,6 +197,15 @@ if (!file.exists(figdir)){dir.create(figdir)}   # create a local directory to st
 datadir <- 'local/processeddata/'
 if (!file.exists(datadir)){dir.create(datadir)}   # create a local directory to store processed data
 
+         if (!file.exists(paste0(datadir,'headerfile.csv'))){
+           # download it from OSF
+           if (!exists('osffiles')){
+           osfnode <- 'x8u4v'
+           osfproject <- osf_retrieve_node(osfnode)
+          osffiles <- osf_ls_files(osfproject,n_max=300)}
+          fid <- which(osffiles$name=='headerfile.csv')
+          osf_download(osffiles[fid,],datadir,progress=TRUE)
+         } 
 
 ```
 
