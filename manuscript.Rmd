@@ -31,7 +31,7 @@ processdata <- 1  # this flag determines the amount of processing, with 4 levels
 # 1 - generate figures using the processed group data
 # 2 - average data across participants, do bootstrapping
 # 3 - download all raw data and analyse (requires 48GB of storage)
-cleanupraw <- 1  # if downloading raw data, delete once processed to save space
+cleanupraw <- 0  # if downloading raw data, delete once processed to save space
 
 domodelling <- 0    # if set to 1, run the Stan models (takes ~24 hours)
 
@@ -2277,7 +2277,7 @@ knitr::include_graphics(paste0(figdir,'TFdata.pdf'))
 
 ## Experiment 3
 
-In Experiment 1 we found evidence of stronger binocular facilitation for cortical responses to luminance flicker (measured using EEG), compared with subcortical responses (measured using pupillometry). Since perception is dependent on cortical responses, these results provide a clear prediction for perceived contrast judgements indexed by psychophysical contrast matching paradigms [e.g. @Anstis1998; @Levelt1965; @Legge1981; @Quaia2018]. We therefore conducted such an experiment, in which participants judged which of two stimuli had the greater perceived amplitude of flicker. One stimulus was a matching stimulus, that had a fixed binocular flicker amplitude of either 24\% or 48\% (temporal) contrast. The other stimulus was a target stimulus, the contrast of which was controlled by a staircase algorithm. We tested 9 ratios of contrast between the left and right eyes.
+In Experiment 1 we found evidence of stronger binocular facilitation for cortical responses to luminance flicker (measured using EEG), compared with subcortical responses (measured using pupillometry; see Figure \@ref(fig:BSratios)). Since perception is dependent on cortical responses, these results provide a clear prediction for perceived contrast judgements indexed by psychophysical contrast matching paradigms [e.g. @Anstis1998; @Levelt1965; @Legge1981; @Quaia2018]. We therefore conducted such an experiment, in which participants judged which of two stimuli had the greater perceived amplitude of flicker. One stimulus was a matching stimulus, that had a fixed binocular flicker amplitude of either 24\% or 48\% (temporal) contrast. The other stimulus was a target stimulus, the contrast of which was controlled by a staircase algorithm. We tested 9 ratios of contrast between the left and right eyes.
 
 The results from the matching experiment are shown in Figure \@ref(fig:matchingdata). Each data point indicates the contrast levels required in each eye that were perceptually equivalent to the binocular 24\% (red circles) and 48\% (blue circles) matching contrasts. At both matching contrasts, we see a very substantial increase in the physical contrast required for a monocular target (data points along the *x*- and *y*-axes), compared to a binocular target (points along the diagonal of *x*=*y*). For example with a 48\% match, the monocular targets required contrasts close to 100\%, whereas binocular targets required a contrast of around 50\%. The data points between these extremes also fall close to the predictions of a linear summation model (diagonal dotted lines), and are inconsistent with a winner-takes-all (or MAX) model (dashed lines). Overall, these matching results are consistent with the approximately linear summation effects observed in the EEG data of Experiment 1 (Figure \@ref(fig:EEGdata)c,f).
 
@@ -3451,11 +3451,11 @@ The results of our main experiment were unexpected for both the pupillometry and
 
 Given the above, where does this leave our understanding of the overarching purpose of signal combination? @Baker2017 point out that strong suppression between channels that are subsequently summed is equivalent to a Kalman filter, which is the optimal method for combining two noisy inputs [see also @Ernst2002]. Functionally, interocular suppression may therefore act to dynamically suppress noise, rendering binocular vision more stable. This account has intuitive appeal, and is consistent with other models that propose binocular combination as a means of redundancy reduction [@Li1994; @May2022]. One possibility is that optimal combination is useful for visual perception --- a critical system for interacting with the local environment --- and is therefore worth devoting the additional resource of inhibitory wiring between ocular channels. However the other examples of binocular combination discussed above are primarily physiological responses (pupil size, eye movements, hormone release) that may benefit less from an increased signal-to-noise ratio, or otherwise be phylogenetically older than binocular pattern vision. Conceptualised another way, the brain can repurpose a generic architecture for different situational demands by adjusting parameter values (here the weight of interocular suppression) to achieve different outcomes. Our future work in this area intends to compare binocular combination for specific photoreceptor pathways, including different cone classes, and intrinsically photoreceptive retinal ganglion cells. 
 
-Pupil size affects the total amount of light falling on the retina. It is therefore the case that fluctuations in pupil diameter have a downstream effect on the signals reaching cortex. We did not incorporate such interactions into our computational model, though in principle this might be worthwhile. However we anticipate than any such effects would be small, since pupil modulations at 2Hz are in the order of 2% of overall diameter [e.g. @Spitschan2014]. It is also the case that cortical activity can modulate pupil diameter, usually through arousal and attention mechanisms [e.g. @Bradley2008]. We think it unlikely that these temporally coarse processes would have a differential effect on e.g. monocular and binocular stimulation conditions in our experiment, and any fluctuations during an experimental session (perhaps owing to fatigue) will be equivalent for our comparisons of interest. Therefore we make the simplifying assumption that the pupil and perceptual pathways are effectively distinct, but hope to investigate this more directly in future neuroimaging work.
+Pupil size affects the total amount of light falling on the retina. It is therefore the case that fluctuations in pupil diameter have a downstream effect on the signals reaching cortex. We did not incorporate such interactions into our computational model, though in principle this might be worthwhile. However we anticipate than any such effects would be small, since pupil modulations at 2Hz are in the order of 2% of overall diameter [e.g. @Spitschan2014]. It is also the case that cortical activity can modulate pupil diameter, usually through arousal and attention mechanisms [e.g. @Bradley2008]. We think it unlikely that these temporally coarse processes would have a differential effect on e.g. monocular and binocular stimulation conditions in our experiment, and any fluctuations during an experimental session (perhaps owing to fatigue) will be equivalent for our comparisons of interest. Therefore we make the simplifying assumption that the pupil and perceptual pathways are effectively distinct, but hope to investigate this more directly in future neuroimaging work. Using fMRI to simultaneously image cortical and subcortical brain regions will also allow us to check that the differences we report here are not a consequence of the different measurement techniques we used (pupillometry and EEG).
 
 Classic studies investigating the neurophysiological architecture of V1 reported that cells in cytochrome-oxidase 'blobs' [@Horton1981; @Livingstone1984] are biased towards low spatial frequencies [@Tootell1988; @Edwards1995], and relatively insensitive to stimulus orientation [@Horton1981; @Livingstone1984; though see @Economides2011]. As the blob regions are embedded within ocular dominance columns [@Horton1981], they are also largely monocular [@Livingstone1984; @Tychsen2004]. More recent work has reported psychophysical evidence for unoriented chromatic [@Gheiratmand2013] and achromatic [@Meese2011] mechanisms, that also appear to be monocular. Our use of luminance flicker might preferentially stimulate these mechanisms, perhaps explaining why our EEG data show little evidence of binocular interactions. Indeed, our EEG results could potentially be explained by a model involving entirely non-interacting monocular channels, with the binocular facilitation effects we find (e.g. Figures \@ref(fig:BSratios) \& \@ref(fig:TFdata)) owing to additivity of the electrophysiological response across independent monocular cells, rather than within binocular neurons. We therefore performed an additional analysis to investigate this possibility.
 
-In the steady-state literature, one hallmark of a nonlinear system that pools inputs is the presence of intermodulation responses at the sums and differences of the fundamental flicker frequencies [@Tsai2012]. In Figure \@ref(fig:IMfig) we plot the amplitude spectra of conditions from Experiment 1 in which the two eyes were stimulated at different frequencies (2Hz and 1.6Hz) but at the same contrast (48\%; these correspond to the binocular cross and dichoptic cross conditions in Figures \@ref(fig:pupildata)d,e and \@ref(fig:EEGdata)d,e). Consistent with the temporal properties of pupil responses and EEG activity, Figure \@ref(fig:IMfig)a reveals a strong intermodulation difference response at 0.4Hz (red dashed line), and Figure \@ref(fig:IMfig)b reveals an intermodulation sum response at 3.6Hz (red dashed line). The presence of these intermodulation terms is predicted by nonlinear gain control models of the type considered here [@Tsai2012; @Baker2017], and indicates that the processing of monocular flicker signals is not fully linear prior to the point at which they are combined across the eyes. Indeed, our model architecture makes specific predictions about the location of interocular suppression - it impacts before binocular combination, consistent with results from primate physiology [@].
+In the steady-state literature, one hallmark of a nonlinear system that pools inputs is the presence of intermodulation responses at the sums and differences of the fundamental flicker frequencies [@Tsai2012]. In Figure \@ref(fig:IMfig) we plot the amplitude spectra of conditions from Experiment 1 in which the two eyes were stimulated at different frequencies (2Hz and 1.6Hz) but at the same contrast (48\%; these correspond to the binocular cross and dichoptic cross conditions in Figures \@ref(fig:pupildata)d,e and \@ref(fig:EEGdata)d,e). Consistent with the temporal properties of pupil responses and EEG activity, Figure \@ref(fig:IMfig)a reveals a strong intermodulation difference response at 0.4Hz (red dashed line), and Figure \@ref(fig:IMfig)b reveals an intermodulation sum response at 3.6Hz (red dashed line). The presence of these intermodulation terms is predicted by nonlinear gain control models of the type considered here [@Tsai2012; @Baker2017], and indicates that the processing of monocular flicker signals is not fully linear prior to the point at which they are combined across the eyes. Indeed, our model architecture makes specific predictions about the location of interocular suppression - it impacts before binocular combination, consistent with results from primate physiology [@Dougherty2019].
 
 ``` {r createIMfig, include=FALSE, results='hide'}
 
@@ -3538,6 +3538,7 @@ text(3.6,0.32,'F1+F2',cex=1.2,adj=0.5,col='red')
 text(2,0.32,'F1',cex=1.2,adj=0.5,col='black')
 text(1.6,0.32,'F2',cex=1.2,adj=0.5,col='darkgreen')
 
+dev.off()
 }
 
 ```
@@ -3575,7 +3576,6 @@ The authors declare no competing interests.
 ```{r repindividualanalysis, include=FALSE, results='hide'}
 
 # (download and) analyse individual participant data for replication expt
-processdata <- 3
 
 if (processdata > 2){
   
@@ -4162,17 +4162,6 @@ text(-0.7,0.4,'(a)',adj=0.5,cex=2.5)
 
 dev.off()
 
-         if (!file.exists(paste0(localdir,'StimulusExample.png'))){
-           # download it from OSF
-           if (!exists('osffiles')){
-           osfnode <- 'tbema'
-           osfproject <- osf_retrieve_node(osfnode)
-          osffiles <- osf_ls_files(osfproject,n_max=300)}
-          fid <- which(osffiles$name=='StimulusExample.png')
-          osf_download(osffiles[fid,],localdir,progress=TRUE)
-         } 
-
-stim <- readPNG('local/StimulusExample.png')
 
   PostScriptTrace('CRF1p.ps')
   p1 <- readPicture('CRF1p.ps.xml')
@@ -4199,12 +4188,6 @@ stim <- readPNG('local/StimulusExample.png')
   pdf(paste0(figdir,"pupildataRep.pdf"), bg="transparent", height = 10, width = 15)
   par(mar=c(0.1,0.1,0.1,0.1))
   plot(x=NULL,y=NULL,axes=FALSE, ann=FALSE, xlim=c(0,1), ylim=c(0,1))
-  
-  aspratio <- 10/15  # this is the aspect ratio of the output pdf
-  imwidth <- 0.2
-  xstart <- 0.85
-  ystart <- 0.72
-  rasterImage(stim,xstart,ystart,xstart+imwidth*aspratio,ystart+imwidth) 
   
   grid.picture(p1,x=0.17,y=0.25,width=0.32,height=1)
   grid.picture(p2,x=0.5,y=0.25,width=0.32,height=1)
