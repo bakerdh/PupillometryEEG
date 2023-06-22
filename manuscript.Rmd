@@ -31,6 +31,7 @@ processdata <- 3  # this flag determines the amount of processing, with 4 levels
 # 1 - generate figures using the processed group data
 # 2 - average data across participants, do bootstrapping
 # 3 - download all raw data and analyse (requires 48GB of storage)
+cleanupraw <- 1  # if downloading raw data, delete once processed to save space
 
 domodelling <- 0    # if set to 1, run the Stan models (takes ~24 hours)
 
@@ -465,7 +466,7 @@ maskindex2 <- (2*1.6*10)+1
       }
       
       d <- dir(paste0(rawdir,'P',100+participant),full.names=TRUE)
-       
+      
       pupiltargets <- array(0,dim=c(3,2,60))
 pupilmasks <- pupiltargets
 pupilwaveforms <- array(0,dim=c(3,2,60,120*14))
@@ -600,6 +601,7 @@ IMspectraP <- apply(pupilspectra[,,c(44,49,54,59),],4,mean,na.rm=TRUE)
 IMspectraE <- apply(EEGspectra[,electrodeindices,c(44,49,54,59),],4,mean,na.rm=TRUE)
 save(file=paste(datadir,'P',100+participant,'summary.RData',sep=''),list=c('cleanmeansP','cleanmeansE','cleanmeansE2','cleanmasksP','cleanmasksE','cleanmasksE2','meanspectraP','meanspectraE','meanwavesP','meanwavesE','electrodes','IMspectraP','IMspectraE'))
 
+ if (cleanupraw==1){file.remove(d)} # delete raw data files to save space
       }
 
       }
@@ -2040,6 +2042,7 @@ if (processdata > 2){
 
     
     save(file=paste0(datadir,'P',150+participant,'summary.RData'),list=c('cleanmeansE','meanspec'))
+    if (cleanupraw==1){file.remove(d)}  # delete raw data files to save space
     }
     
   }
@@ -3775,6 +3778,8 @@ meanwavesE <- apply(EEGwaveforms[,electrodeindices,c(15,20),],4,mean,na.rm=TRUE)
 meanspectraP <- apply(pupilspectra[,,c(15,20),],4,mean,na.rm=TRUE)
 meanspectraE <- apply(EEGspectra[,electrodeindices,c(15,20),],4,mean,na.rm=TRUE)
 save(file=paste(datadir,'P',200+participant,'summary.RData',sep=''),list=c('cleanmeansP','cleanmeansE','cleanmeansE2','cleanmasksP','cleanmasksE','cleanmasksE2','meanspectraP','meanspectraE','meanwavesP','meanwavesE','electrodes'))
+
+ if (cleanupraw==1){file.remove(d)} # delete raw data files to save space
 
       }
         
