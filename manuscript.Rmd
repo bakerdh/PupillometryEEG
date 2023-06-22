@@ -26,7 +26,7 @@ header-includes:
 
 ```{r setup, include=FALSE}
 
-processdata <- 3  # this flag determines the amount of processing, with 4 levels:
+processdata <- 1  # this flag determines the amount of processing, with 4 levels:
 # 0 - do no processing, generate the pdf using existing versions of all figures
 # 1 - generate figures using the processed group data
 # 2 - average data across participants, do bootstrapping
@@ -3573,6 +3573,7 @@ The authors declare no competing interests.
 ```{r repindividualanalysis, include=FALSE, results='hide'}
 
 # (download and) analyse individual participant data for replication expt
+processdata <- 3
 
 if (processdata > 2){
   
@@ -3611,7 +3612,7 @@ maskindex2 <- (2*1.6*10)+1
          }
          
          # then unzip the tar file
-         untar(paste0(rawdir,'P',200+participant,'.tar'),exdir=paste0(rawdir,'P',100+participant))
+         untar(paste0(rawdir,'P',200+participant,'.tar'),exdir=paste0(rawdir,'P',200+participant))
          
          # and delete the tar file to save storage space
          file.remove(paste0(rawdir,'P',200+participant,'.tar'))
