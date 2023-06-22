@@ -26,12 +26,12 @@ header-includes:
 
 ```{r setup, include=FALSE}
 
-processdata <- 1  # this flag determines the amount of processing, with 4 levels:
+processdata <- 3  # this flag determines the amount of processing, with 4 levels:
 # 0 - do no processing, generate the pdf using existing versions of all figures
 # 1 - generate figures using the processed group data
 # 2 - average data across participants, do bootstrapping
 # 3 - download all raw data and analyse (requires 48GB of storage)
-cleanupraw <- 0  # if downloading raw data, delete once processed to save space
+cleanupraw <- 1  # if downloading raw data, delete once processed to save space
 
 domodelling <- 0    # if set to 1, run the Stan models (takes ~24 hours)
 
