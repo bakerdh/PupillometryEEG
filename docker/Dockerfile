@@ -19,6 +19,7 @@ ez \
 gtools \
 signal \
 boot \
+rstatix \
 quickpsy \
 rstan \
 coda \
