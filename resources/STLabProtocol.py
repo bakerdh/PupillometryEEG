@@ -203,7 +203,7 @@ def main():
             pcore.command(f'R {op.abspath(subject_dir)}')
 
         # Get conditions, double up and randomise
-        trials = pd.read_csv('datasource.csv')
+        trials = pd.read_csv('STLabDatasource.csv')
 
         if not DOUBLE_TRIALS:
             trials = (trials.sample(frac=FRAC_TRIALS)
