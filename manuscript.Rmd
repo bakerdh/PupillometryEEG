@@ -240,7 +240,7 @@ The brain must combine information across multiple sensory inputs to derive a co
 
 For pattern vision, binocular presentation confers greater sensitivity to low contrast targets than monocular presentation. This is known as binocular summation, with summation ratios (the relative improvement under binocular presentation) at detection threshold lying between $\sqrt{2}$ and 2 [@Campbell1965; @Baker2018]. This advantage is lost at high stimulus contrasts, where both psychophysical performance (contrast discrimination thresholds) [@Legge1984; @Meese2006] and neural activity [@Moradi2009; @Baker2017] are approximately equal for monocular and binocular presentation. Contemporary models of binocular vision [@Ding2006; @Meese2006] advocate a process of interocular suppression that normalizes the two eyes' inputs at high contrasts and negates the binocular advantage. This is consistent with our everyday experience of 'ocularity invariance' [@Baker2007]: perceived contrast does not change when one eye is opened and closed.
 
-The pupillary light reflex is an automatic constriction of the iris sphincter muscles in response to increases in light levels, which causes the pupil to shrink [@McDougal2008]. There is a clear binocular component to this reflex, as stimulation of one eye still causes constriction of the other eye's pupil (termed the consensual response; @Wyatt1981). Importantly, the neuroanatomical pathway involved completely bypasses the canonical cortical pathway (retina to V1), instead involving a network of subcortical nuclei, including the Pretectal Olivary nucleus, Superior Cervical ganglion, and Edinger-Westphal nucleus [@Angee2021; @Mathot2018; @McDougal2008; @Wang2015]. To account for the consensual response, these brain regions must combine information from the left and right eyes [@Doesschate1967], yet the computation that achieves this is achieved is unclear. The pupil response can be modulated by periodic changes in luminance, and is temporally low-pass [@Barrionuevo2014; @Spitschan2014], most likely due to the mechanical limitations of the iris sphincter and dilator muscles. 
+The pupillary light reflex is an automatic constriction of the iris sphincter muscles in response to increases in light levels, which causes the pupil to shrink [@McDougal2008]. There is a clear binocular component to this reflex, as stimulation of one eye still causes constriction of the other eye's pupil (termed the consensual response; @Wyatt1981). Importantly, the neuroanatomical pathway involved completely bypasses the canonical cortical pathway (retina to V1), instead involving a network of subcortical nuclei, including the Pretectal Olivary nucleus, Superior Cervical ganglion, and Edinger-Westphal nucleus [@Angee2021; @Mathot2018; @McDougal2008; @Wang2015]. To account for the consensual response, these brain regions must combine information from the left and right eyes [@Doesschate1967], yet the computation that achieves this is unclear. The pupil response can be modulated by periodic changes in luminance, and is temporally low-pass [@Barrionuevo2014; @Spitschan2014], most likely due to the mechanical limitations of the iris sphincter and dilator muscles [@Privitera2006]. 
 
 To investigate the binocular combination of light, we designed an experiment that allowed us to simultaneously record electrophysiological and pupillometric responses to monocular and binocular stimuli. We chose a primary flicker frequency of 2Hz as a compromise between the low-pass pupil response [see @Barrionuevo2014; @Spitschan2014], and the relatively higher-pass EEG response [@Regan1966]. This novel paradigm allowed us to probe both cortical (using EEG) and subcortical (using a binocular eyetracker) pathways simultaneously in response to flickering light, and make quantitative comparisons between them. Periodic flicker entrains both neural [@Norcia2015] and pupil [@Spitschan2014] responses at the flicker frequency, enabling precise estimation of response amplitudes in the Fourier domain. Relative to the response to a monocular signal, adding a signal in the other eye can either increase the response (facilitation) or reduce it (suppression). We followed up our main experiment with additional exploration of the effect of stimulus frequency, and a psychophysical matching experiment measuring perceived flicker intensity (i.e. temporal contrast). The results are interpreted using a hierarchical Bayesian computational model of binocular vision, and reveal that subcortical pathways implement stronger interocular suppression than the canonical cortical pathway.
 
@@ -2429,7 +2429,7 @@ knitr::include_graphics(paste0(figdir,'matchingdata.pdf'))
 
 ## Computational modelling
 
-We fitted a computational model to the data from Experiments 1 & 3 using a hierarchical Bayesian approach. The model behaviour is displayed in Figure \@ref(fig:modelfigure)e-h, with empirical data replotted in Figure \@ref(fig:modelfigure)a-d for comparison. In general, the model captures the key characteristics of the empirical data, with group-level parameter estimates provided in Table \@ref(tab:paramtable). We were particularly interested in comparing the weight of interocular suppression across data sets. We therefore plot the posterior distributions for this parameter for all four data sets (see Figure \@ref(fig:modelfigure)i). The key finding is that the pupillometry results (green distribution) display a much greater weight of interocular suppression compared with the other data sets (grey, purple and yellow distributions). There is no overlap between the pupillometry distribution and any of the other three. All four distributions are also meaningfully below a weight of 1 -- the value that previous work using grating stimuli would predict [@Meese2006; @Baker2017], and the peak location of our prior distribution (black curve). These results offer an explanation of the empirical data: the strong interocular suppression for the pupillometry data is consistent with the weak binocular facilitation, and measurable dichoptic masking observed using that method. The weaker suppression for the other experiments is consistent with the near-linear binocular facilitation effects, and absent dichoptic masking.
+We fitted a computational model to the data from Experiments 1 & 3 using a hierarchical Bayesian approach. The model behaviour is displayed in Figure \@ref(fig:modelfigure)a-d, with empirical data superimposed for comparison. In general, the model captures the key characteristics of the empirical data, with group-level parameter estimates provided in Table \@ref(tab:paramtable). We were particularly interested in comparing the weight of interocular suppression across data sets. We therefore plot the posterior distributions for this parameter for all four data sets (see Figure \@ref(fig:modelfigure)e). The key finding is that the pupillometry results (green distribution) display a much greater weight of interocular suppression compared with the other data sets (grey, purple and yellow distributions). There is no overlap between the pupillometry distribution and any of the other three. All four distributions are also meaningfully below a weight of 1 -- the value that previous work using grating stimuli would predict [@Meese2006; @Baker2017], and the peak location of our prior distribution (black curve). These results offer an explanation of the empirical data: the strong interocular suppression for the pupillometry data is consistent with the weak binocular facilitation, and measurable dichoptic masking observed using that method. The weaker suppression for the other experiments is consistent with the near-linear binocular facilitation effects, and absent dichoptic masking.
 
 ```{r makestanmodels, include=FALSE, results='hide'}
 
@@ -2983,12 +2983,12 @@ condlist <- c(1,2,3,6)
 for (cond in 1:4){lines(20*log10(finex),modelA[condlist[cond],], col=colpal[condlist[cond]], lwd=3, cex=0.5)}
 
 for (cond in 1:3){
-  points(contrastsdB,abs(cleanmeansP[cond,]), pch = 20+cond, col='black', bg=colpal[cond], cex=1.6, lwd=3)   # draw the data points themselves
+  points(contrastsdB,abs(cleanmeansP[cond,]), pch = 20+cond, col=colpal[cond], bg=colpal[cond], cex=1.6, lwd=3)   # draw the data points themselves
 }  
 cond <- 6
-  points(contrastsdB,abs(cleanmeansP[cond,]), pch = 25, col='black', bg=colpal[cond], cex=1.6, lwd=3) 
+  points(contrastsdB,abs(cleanmeansP[cond,]), pch = 25, col=colpal[cond], bg=colpal[cond], cex=1.6, lwd=3) 
 
-legend(21,0.03,c('Monocular','Binocular','Dichoptic','Dichoptic cross'),pch=c(21:23,25),pt.bg=colpal[c(1:3,6)],pt.lwd=3,pt.cex=1.6,box.lwd=2)
+legend(21,0.03,c('Monocular','Binocular','Dichoptic','Dichoptic cross'),pch=c(21:23,25),pt.bg=colpal[c(1:3,6)],lwd=3,lty=1,col=colpal[c(1:3,6)],pt.lwd=3,pt.cex=1.6,box.lwd=2)
 text(17,0.028,'(a)',adj=0.5,cex=2.5)
 
 dev.off()  
@@ -3068,10 +3068,10 @@ condlist <- c(1,2,3,6)
 for (cond in 1:4){lines(20*log10(finex),modelA[condlist[cond],], col=colpal[condlist[cond]], lwd=3, cex=0.5)}
 
 for (cond in 1:3){
-  points(contrastsdB,abs(cleanmeansEav[cond,]), pch = 20+cond, col='black', bg=colpal[cond], cex=1.6, lwd=3)   # draw the data points themselves
+  points(contrastsdB,abs(cleanmeansEav[cond,]), pch = 20+cond, col=colpal[cond], bg=colpal[cond], cex=1.6, lwd=3)   # draw the data points themselves
 }  
 cond <- 6
-  points(contrastsdB,abs(cleanmeansEav[cond,]), pch = 25, col='black', bg=colpal[cond], cex=1.6, lwd=3)   # draw the data points 
+  points(contrastsdB,abs(cleanmeansEav[cond,]), pch = 25, col=colpal[cond], bg=colpal[cond], cex=1.6, lwd=3)   # draw the data points 
 
 text(17,0.95,'(b)',adj=0.5,cex=2.5)
 
@@ -3152,10 +3152,10 @@ condlist <- c(1,2,3,6)
 for (cond in 1:4){lines(20*log10(finex),modelA[condlist[cond],], col=colpal[condlist[cond]], lwd=3, cex=0.5)}
 
 for (cond in 1:3){
-  points(contrastsdB,abs(cleanmeansE2av[cond,]), pch = 20+cond, col='black', bg=colpal[cond], cex=1.6, lwd=3)   # draw the data points themselves
+  points(contrastsdB,abs(cleanmeansE2av[cond,]), pch = 20+cond, col=colpal[cond], bg=colpal[cond], cex=1.6, lwd=3)   # draw the data points themselves
 }  
 cond <- 6
-  points(contrastsdB,abs(cleanmeansE2av[cond,]), pch = 25, col='black', bg=colpal[cond], cex=1.6, lwd=3)  
+  points(contrastsdB,abs(cleanmeansE2av[cond,]), pch = 25, col=colpal[cond], bg=colpal[cond], cex=1.6, lwd=3)  
 
 text(17,0.95,'(c)',adj=0.5,cex=2.5)
 
@@ -3289,7 +3289,7 @@ dev.off()
 
 ```
 
-```{r modelfigure, fig.cap="Summary of computational modelling. Panels (a-d) show empirical data from key conditions, replotted from earlier figures for the pupillometry (a), first harmonic EEG responses (b), second harmonic EEG responses (c) and contrast matching (d) experiments. Panels (e-h) show model behaviour for the same conditions, generated using the median group-level parameter values.  Panel (i) shows the posterior probability distributions of the interocular suppression parameter for each of the four model fits. The pupillometry distribution (green) is centred about a substantially higher suppressive weight than for the other data types (note the logarithmic x-axis). The black curve shows the (scaled) prior distribution for the weight parameter.", fig.align="center", echo=FALSE}
+```{r modelfigure, fig.cap="Summary of computational modelling. Panels (a-d) show empirical data from key conditions, replotted from earlier figures for the pupillometry (a), first harmonic EEG responses (b), second harmonic EEG responses (c) and contrast matching (d) experiments, with curves showing model behaviour generated using the median group-level parameter values.  Panel (e) shows the posterior probability distributions of the interocular suppression parameter for each of the four model fits. The pupillometry distribution (green) is centred about a substantially higher suppressive weight than for the other data types (note the logarithmic x-axis). The black curve shows the (scaled) prior distribution for the weight parameter.", fig.align="center", echo=FALSE}
 
 knitr::include_graphics(paste0(figdir,'modelfigure.pdf'))
 
@@ -4481,7 +4481,7 @@ dev.off()
 
 ```
 
-We conducted a conceptual replication of Experiment 1 using an alternative system. A pair of Spectra Tune Lab multiprimary devices (LEDmotive Technologies LLC, Barcelona, Spain) were coupled to a binocular headset using liquid light guides. The light was imaged onto a circular diffuser for each eye (field size 30 deg) with the central 8 degrees masked off using a black occluder. Therefore the replication experiment involved peripheral stimulation, unlike the main experiment which stimulated the central ~4 degrees of the visual field. All conditions were otherwise as described for the main experiment, and we tested 12 participants in total.
+We conducted a conceptual replication of Experiment 1 using an alternative system of hardware and software [@Martin2022; @Martin2023]. A pair of Spectra Tune Lab multiprimary devices (LEDmotive Technologies LLC, Barcelona, Spain) were coupled to a binocular headset using liquid light guides. The light was imaged onto a circular diffuser for each eye (field size 30 deg) with the central 8 degrees masked off using a black occluder. Therefore the replication experiment involved peripheral stimulation, unlike the main experiment which stimulated the central ~4 degrees of the visual field. All conditions were otherwise as described for the main experiment, and we tested 12 participants in total.
 
 The pupillometry results are shown in Figure \@ref(fig:appendixfig1) and correspond closely to those from the main experiment (Figure \@ref(fig:pupildata)). The ratio of binocular to monocular responses in Figure \@ref(fig:appendixfig1)c is similar, and suppression is evident in Figure \@ref(fig:appendixfig1)d,e. Of particular interest is the existence of a slight response at the second harmonic (4Hz, Figure \@ref(fig:appendixfig1)b), which was not present in our original data. This may be because the driving signal is stronger when stimulating the periphery (note the clear waveform in Figure \@ref(fig:appendixfig1)a), or more robust to eye movements, or it might indicate additional nonlinearities not present at the fovea.
 
