@@ -1,3 +1,5 @@
+# Different rules for binocular combination of luminance flicker in cortical and subcortical pathways (code)
+
 These materials are a computationally reproducible version of the paper:
 
 Segala, F.G., Bruno, A., Aung, M.T., Wade, A.R. & Baker, D.H. (2023). Different rules for binocular combination of luminance flicker in cortical and subcortical pathways, *eLife*, https://doi.org/10.7554/eLife.87048

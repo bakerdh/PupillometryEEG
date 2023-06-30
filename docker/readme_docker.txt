@@ -16,16 +16,16 @@ Instructions:
 2. Next download the Dockerfile from the project GitHub repository and place it in a subdirectory of your root user directory called 'docker'
 
 3. Run the docker file by entering the following in a terminal:
-docker build -t babymind -f docker/Dockerfile .
+docker build -t pupillometryeeg -f docker/Dockerfile .
 
 4. Once the image has finished building, launch a container in Docker desktop by clicking the play icon
 
-5. Call the container something sensible (i.e. babymind), set the host port to 8787, and add an Environment variable called PASSWORD with the value: pass
+5. Call the container something sensible (i.e. PupillometryEEG), set the host port to 8787, and add an Environment variable called PASSWORD with the value: pass
 
 6. The container should then appear in the Containers section of Docker desktop, and can be accessed by clicking on the port number (8787:8787), which will launch it in your web browser. Once the container launches, you can login to the RStudio instance with username: rstudio, password: pass
 
 7. Click on the Terminal tab in the RStudio window and enter:
-git clone https://github.com/bakerdh/babymind.git
-This will download the repository to a folder called Bilingual-switching-ageing
+git clone https://github.com/bakerdh/PupillometryEEG.git
+This will download the repository to a folder called PupillometryEEG
 
 8. You can then open the project and the markdown file, and run the code
