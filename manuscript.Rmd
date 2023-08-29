@@ -1060,7 +1060,7 @@ mondichPstatsX2 <- anovacirc.test(alldata,allgroupA,allP)
 
 The pupillometry results are summarised in Figure \@ref(fig:pupildata). The group average waveform for binocular presentation is shown in Figure \@ref(fig:pupildata)a. There is a substantial pupil constriction at stimulus onset, followed by visible oscillations at the flicker frequency (2Hz, see waveform at foot). The average Fourier spectrum is displayed in Figure \@ref(fig:pupildata)b, and shows a clear spike at 2 Hz, but no evidence of a second harmonic response at 4Hz (though see Appendix 1). These results demonstrate that our paradigm can evoke measurable steady-state pupil responses at 2Hz.
 
-```{r pupildata, fig.cap="Summary of pupillometry results for N=30 participants. Panel (a) shows a group average waveform for binocular presentation (low pass filtered at 5Hz), with the driving signal plotted at the foot. Negative values indicate constriction relative to baseline, and positive values indicate dilation. Panel (b) shows the average Fourier spectrum (absolute amplitude values). Panels (c,d) show contrast response functions for pupil diameter at 2Hz for different conditions (illustrated in Figure 1). Panel (e) shows contrast response functions at 1.6Hz for three conditions. Shaded regions and error bars indicate bootstrapped standard errors.", fig.align="center", echo=FALSE}
+```{r pupildata, fig.cap="Summary of pupillometry results for N=30 participants. Panel (a) shows a group average waveform for binocular presentation (low pass filtered at 5Hz), with the driving signal plotted at the foot. Negative values indicate constriction relative to baseline, and positive values indicate dilation. Panel (b) shows the average Fourier spectrum (absolute amplitude values). Panels (c,d) show contrast response functions for pupil diameter at 2Hz for different conditions (illustrated in Figure 8). Panel (e) shows contrast response functions at 1.6Hz for three conditions. Shaded regions and error bars indicate bootstrapped standard errors.", fig.align="center", echo=FALSE}
 
 knitr::include_graphics(paste0(figdir,'pupildata.pdf'))
 
@@ -3138,7 +3138,7 @@ wlist <- c(pupilW,EEGW,EEG2W,matchingW)
 Rlist <- c(round(c(pupilRmax,EEGRmax,EEG2Rmax),5),'-')
 tabledata <- data.frame(exptnames,round(zlist,digits=2),round(klist,digits=2),round(wlist,digits=2),Rlist)
 
-colnames(tabledata) <- c('Data set','Z','k','w','Rmax')
+colnames(tabledata) <- c('Data set','Z','n','w','Rmax')
 kable(tabledata, align='lcccc',caption = 'Summary of median parameter values.') 
 
 ```
@@ -3362,7 +3362,7 @@ We included six distinct ocular conditions, each at five temporal contrast level
 
 In the remaining three conditions (termed the cross-frequency conditions) an additional flicker frequency of 1.6Hz was introduced. We chose this frequency because it is sufficiently well-isolated from the target frequency (2Hz) in the Fourier spectrum for 10-second trials. We repeated the monocular condition with this stimulus (one eye sees 1.6Hz flicker, the other sees mean luminance), as well as testing in a binocular cross configuration (one eye sees each frequency at the target contrast). The rationale for the binocular cross condition is that it allows us to see the effects of suppression between the eyes without the additional complication of signal summation (which occurs when both eyes receive the same frequency), because the response of each eye can be resolved independently by frequency. Finally, in the dichoptic cross condition, one eye saw the target stimulus flickering at 2Hz, the other eye saw flicker at 1.6Hz with a contrast of 48\% - again this reveals the presence of suppression (by comparison with the 2Hz monocular condition). A schematic overview of the cross-frequency conditions is shown in the lower rows of Figure \@ref(fig:methodsfig). In all conditions, we counterbalanced presentation of the target stimulus across the left and right eyes.
 
-```{r methodsfig, fig.cap="Schematic diagram illustrating the ocular arrangements, and temporal waveforms of the luminance modulations used in Experiment 1. Shaded waveforms indicate a target stimulus, that was presented at one of five contrasts on each trial (denoted by the shading levels). Unshaded waveforms indicate mask stimuli, that were presented at a fixed contrast level of 48\\% regardless of the target contrast. Each waveform corresponds to a 1 second period of a 12 second trial, and coloured symbols are for consistency with Figures 2 and 3. The icon in the upper left corner illustrates the stimulus appearance (a luminous disc against a black background). The left and right eye assignments were counterbalanced across trials in the experiment (i.e. the monocular stimulus could be shown to either eye with equal probability).", fig.align="center", echo=FALSE}
+```{r methodsfig, fig.cap="Schematic diagram illustrating the ocular arrangements, and temporal waveforms of the luminance modulations used in Experiment 1. Shaded waveforms indicate a target stimulus, that was presented at one of five contrasts on each trial (denoted by the shading levels). Unshaded waveforms indicate mask stimuli, that were presented at a fixed contrast level of 48\\% regardless of the target contrast. Each waveform corresponds to a 1 second period of a 12 second trial, and coloured symbols are for consistency with Figures 1 and 2. The icon in the upper left corner illustrates the stimulus appearance (a luminous disc against a black background). The left and right eye assignments were counterbalanced across trials in the experiment (i.e. the monocular stimulus could be shown to either eye with equal probability).", fig.align="center", echo=FALSE}
 
 knitr::include_graphics(paste0(figdir,'methodsfig.pdf'))
 
@@ -4489,7 +4489,7 @@ We conducted a conceptual replication of Experiment 1 using an alternative syste
 
 The pupillometry results are shown in Figure \@ref(fig:appendixfig1) and correspond closely to those from the main experiment (Figure \@ref(fig:pupildata)). The ratio of binocular to monocular responses in Figure \@ref(fig:appendixfig1)c is similar, and suppression is evident in Figure \@ref(fig:appendixfig1)d,e. Of particular interest is the existence of a slight response at the second harmonic (4Hz, Figure \@ref(fig:appendixfig1)b), which was not present in our original data. This may be because the driving signal is stronger when stimulating the periphery (note the clear waveform in Figure \@ref(fig:appendixfig1)a), or more robust to eye movements, or it might indicate additional nonlinearities not present at the fovea.
 
-```{r appendixfig1, fig.cap="Summary of pupillometry results for N = 12 participants, for peripheral stimulation. See Figure 2 for a description of each panel.", fig.align="center", echo=FALSE}
+```{r appendixfig1, fig.cap="Summary of pupillometry results for N = 12 participants, for peripheral stimulation. See Figure 1 for a description of each panel.", fig.align="center", echo=FALSE}
 
 knitr::include_graphics(paste0(figdir,'pupildataRep.pdf'))
 
@@ -4497,7 +4497,7 @@ knitr::include_graphics(paste0(figdir,'pupildataRep.pdf'))
 
 The EEG results are shown in Figure \@ref(fig:appendixfig2). These still show a strong binocular facilitation effect at the highest contrast levels (Figure \@ref(fig:appendixfig2)c,f), but the contrast response function is less clear at both the first and second harmonics. We suspect that this is because the cortical representation of the peripheral visual field is primarily along the calcarine sulcus, which results in some cancellation of the steady-state signal. This results in weaker signals than we obtained for foveal stimulation (represented at the occipital pole) in the main experiment (see Figure \@ref(fig:EEGdata)).
 
-```{r appendixfig2, fig.cap="Summary of steady-state EEG results for N = 12 participants, for peripheral stimulation. See Figure 3 for a description of each panel.", fig.align="center", echo=FALSE}
+```{r appendixfig2, fig.cap="Summary of steady-state EEG results for N = 12 participants, for peripheral stimulation. See Figure 2 for a description of each panel.", fig.align="center", echo=FALSE}
 
 knitr::include_graphics(paste0(figdir,'EEGdataRep.pdf'))
 
