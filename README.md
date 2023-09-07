@@ -2,7 +2,7 @@
 
 These materials are a computationally reproducible version of the paper:
 
-Segala, F.G., Bruno, A., Aung, M.T., Wade, A.R. & Baker, D.H. (2023). Different rules for binocular combination of luminance flicker in cortical and subcortical pathways, *eLife*, https://doi.org/10.7554/eLife.87048
+Segala, F.G., Bruno, A., Martin, J.T., Aung, M.T., Wade, A.R. & Baker, D.H. (2023). Different rules for binocular combination of luminance flicker in cortical and subcortical pathways, *eLife*, https://doi.org/10.7554/eLife.87048
 
 The file manuscript.Rmd is an R markdown file that will perform all analyses and figure creation, and produce a pdf version of the manuscript.
 
