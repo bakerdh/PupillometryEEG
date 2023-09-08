@@ -3,7 +3,6 @@ title: "Different rules for binocular combination of luminance flicker in cortic
 author: |
  | Federico G. Segala$^1$, Aurelio Bruno$^2$, Joel T. Martin$^1$, Myat T. Aung$^1$, Alex R. Wade$^1$
  | & Daniel H. Baker$^1$
- | *eLife* (2023) https://doi.org/10.7554/eLife.87048
 output:
   bookdown::pdf_document2:
     fig_caption: yes
@@ -3426,10 +3425,6 @@ We initially preregistered our main hypotheses and analysis intentions for the f
 # Acknowledgements
 
 Supported by Biotechnology and Biological Sciences Research Council grant BB/V007580/1 awarded to DHB and ARW, and Wellcome Trust grant 213616/Z/18/Z to AB.
-
-# Author contributions
-
-**Federico Segala**: Methodology, software, formal analysis, investigation, data curation, writing - original draft, writing - review & editing, visualization. **Aurelio Bruno**: Conceptualization, writing - review & editing, supervision, project administration, funding acquisition. **Joel Martin**: Software, resources, writing - review & editing. **Myat Aung**: Software, resources, writing - review & editing. **Alex Wade**: Conceptualization, methodology, resources, writing - review & editing, supervision, project administration, funding acquisition. **Daniel Baker**: Conceptualization, methodology, software, formal analysis, investigation, resources, data curation, writing - original draft, writing - review & editing, visualization, supervision, project administration, funding acquisition.
 
 # Declaration of interests
 
